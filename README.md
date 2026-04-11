@@ -4,13 +4,13 @@ Web orientada a la importanción de datos de la plataforma Strava y su análisis
 
 ## Stack tecnológico
 
-| Capa | Tecnología |
-|------|-----------|
-| Frontend | React + TypeScript (Vite) |
-| Backend | Node.js + TypeScript (Express) |
-| Base de datos | PostgreSQL |
-| Arquitectura | Hexagonal + DDD |
-| Metodología UI | Atomic Design |
+| Capa           | Tecnología                     |
+| -------------- | ------------------------------ |
+| Frontend       | React + TypeScript (Vite)      |
+| Backend        | Node.js + TypeScript (Express) |
+| Base de datos  | PostgreSQL                     |
+| Arquitectura   | Hexagonal + DDD                |
+| Metodología UI | Atomic Design                  |
 
 ## Estructura del proyecto
 
@@ -74,11 +74,11 @@ La app arranca en `http://localhost:5173`.
 
 ## API
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/health` | Estado del servidor |
-| GET | `/api/activities?athleteId=<id>` | Lista de actividades de un atleta |
-| GET | `/api/activities/:id` | Detalle de una actividad |
+| Método | Ruta                             | Descripción                       |
+| ------ | -------------------------------- | --------------------------------- |
+| GET    | `/health`                        | Estado del servidor               |
+| GET    | `/api/activities?athleteId=<id>` | Lista de actividades de un atleta |
+| GET    | `/api/activities/:id`            | Detalle de una actividad          |
 
 ## Arquitectura hexagonal
 
