@@ -8,3 +8,4 @@ La estructura recomendada: <tipo>(<alcance>): <descripción>
     style: Cambios de formato (espacios, puntos y coma).
     refactor: Cambio de código que no arregla un error ni añade funciones (ej: aplicar Arquitectura Hexagonal ).
     test: Añadir o corregir pruebas.
+    repo: Cambios en la estructura y automatizaciones del repositorio.
