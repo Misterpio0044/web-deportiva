@@ -1,1 +1,2 @@
-# npm test
+#!/usr/bin/env sh
+# Archivo vacío hasta configurar tests
