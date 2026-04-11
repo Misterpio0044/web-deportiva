@@ -1,0 +1,27 @@
+{
+  "name": "web-deportiva",
+  "version": "1.0.0",
+  "description": "Web orientada a la importanción de datos de la plataforma Strava y su análisis.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Misterpio0044/web-deportiva.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Misterpio0044/web-deportiva/issues"
+  },
+  "homepage": "https://github.com/Misterpio0044/web-deportiva#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "husky": "^9.1.7"
+  }
+}
