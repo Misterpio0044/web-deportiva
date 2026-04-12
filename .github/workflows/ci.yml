@@ -22,7 +22,7 @@ jobs:
       - name: Instalar dependencias
         run: npm install --legacy-peer-deps
 
-      - name: 🕵Comprobar Lógica (ESLint)
+      - name: Comprobar Lógica (ESLint)
         run: npm run lint
 
       - name: Comprobar Estética (Prettier)
