@@ -7,7 +7,7 @@ const PORT = 3000;
 app.use(express.json());
 
 // Ruta de prueba
-app.get('/api/km', (req: Request, res: Response) => {
+app.get('/', (req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', message: 'OK' });
 });
 
