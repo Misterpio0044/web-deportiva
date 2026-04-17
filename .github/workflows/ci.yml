@@ -22,6 +22,9 @@ jobs:
       - name: Instalar dependencias
         run: npm install --legacy-peer-deps
 
+      - name: Instalar dependencias frontend
+        run: cd frontend && npm install --legacy-peer-deps
+
       - name: Comprobar Lógica (ESLint)
         run: npm run lint
 
