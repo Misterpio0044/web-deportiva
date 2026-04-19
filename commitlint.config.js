@@ -1,4 +1,3 @@
-/* eslint-disable */
 module.exports = {
   /* Usamos la configuración convencional como base, la de feat, docs... */
   extends: ['@commitlint/config-conventional'],
