@@ -1,16 +1,32 @@
-import { Button } from "@/components/ui/button"
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { AdminRoute } from './components/AdminRoute';
+import { LoginPage } from './ui/pages/LoginPage';
+import { DashboardPage } from './ui/pages/DashboardPage';
+import { AdminAthletesPage } from './ui/pages/AdminAthletesPage';
 
 function App() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 gap-4">
-      <h1 className="text-3xl font-bold text-slate-900">
-        Landing Page
-      </h1>
-      <Button className="bg-green-500 text-white hover:bg-green-600">
-        Mi primer botón profesional
-      </Button>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Protected routes (any authenticated user) */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+        </Route>
+
+        {/* Admin-only routes */}
+        <Route element={<AdminRoute />}>
+          <Route path="/admin/athletes" element={<AdminAthletesPage />} />
+        </Route>
+
+        {/* Default redirect */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
