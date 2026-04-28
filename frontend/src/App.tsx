@@ -9,14 +9,15 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Ruta pública — cualquiera puede entrar */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected routes (any authenticated user) */}
+        {/* Rutas protegidas — solo usuarios autenticados */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
         </Route>
 
-        {/* Admin-only routes */}
+        {/* Rutas de admin — solo rol admin */}
         <Route element={<AdminRoute />}>
           <Route path="/admin/athletes" element={<AdminAthletesPage />} />
         </Route>
