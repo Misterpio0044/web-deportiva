@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { ZodError } from 'zod';
 import { DomainError } from '../domain/shared/DomainError';
 import authRoutes from './http/routes/authRoutes';
 import athleteRoutes from './http/routes/athleteRoutes';
@@ -30,6 +31,14 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof DomainError) {
     res.status(err.httpStatus).json({ message: err.message, code: err.code });
+    return;
+  }
+  if (err instanceof ZodError) {
+    res.status(400).json({
+      message: err.issues[0]?.message ?? 'Datos inválidos',
+      code: 'VALIDATION_ERROR',
+      issues: err.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
+    });
     return;
   }
   if (err instanceof SyntaxError) {

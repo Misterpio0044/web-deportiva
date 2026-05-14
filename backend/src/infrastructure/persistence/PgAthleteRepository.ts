@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { AthleteRepository } from '../../domain/athlete/AthleteRepository';
+import { AthleteRepository, CreateAthleteInput } from '../../domain/athlete/AthleteRepository';
 import { Athlete, AthletePublic } from '../../domain/athlete/Athlete';
 
 function rowToAthlete(row: Record<string, unknown>): Athlete {
@@ -31,6 +31,32 @@ export class PgAthleteRepository implements AthleteRepository {
   async findByEmail(email: string): Promise<Athlete | null> {
     const { rows } = await this.pool.query('SELECT * FROM athletes WHERE email = $1', [email]);
     return rows[0] ? rowToAthlete(rows[0]) : null;
+  }
+
+  async findByUsername(username: string): Promise<Athlete | null> {
+    const { rows } = await this.pool.query('SELECT * FROM athletes WHERE username = $1', [
+      username,
+    ]);
+    return rows[0] ? rowToAthlete(rows[0]) : null;
+  }
+
+  async create(input: CreateAthleteInput): Promise<Athlete> {
+    const { rows } = await this.pool.query(
+      `INSERT INTO athletes
+         (id, firstname, lastname, username, email, password_hash, role)
+       VALUES
+         (nextval('athletes_local_id_seq'), $1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        input.firstname,
+        input.lastname,
+        input.username,
+        input.email,
+        input.passwordHash,
+        input.role ?? 'user',
+      ]
+    );
+    return rowToAthlete(rows[0]);
   }
 
   async findAll(): Promise<AthletePublic[]> {
