@@ -24,7 +24,7 @@ function buildGrid(
   startDate.setDate(today.getDate() - 364 - today.getDay());
 
   const weeks: Array<{ date: string; count: number; dayOfWeek: number }[]> = [];
-  let current = new Date(startDate);
+  const current = new Date(startDate);
 
   for (let w = 0; w < 53; w++) {
     const week: { date: string; count: number; dayOfWeek: number }[] = [];

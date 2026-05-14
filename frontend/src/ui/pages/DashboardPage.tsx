@@ -31,13 +31,24 @@ export function DashboardPage() {
   }, [isAdmin]);
 
   useEffect(() => {
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError('');
     dashboardApi
       .get(selectedAthleteId)
-      .then(setData)
-      .catch(() => setError('Error al cargar el dashboard. ¿Está el servidor corriendo?'))
-      .finally(() => setLoading(false));
+      .then((d) => {
+        if (!cancelled) setData(d);
+      })
+      .catch(() => {
+        if (!cancelled) setError('Error al cargar el dashboard. ¿Está el servidor corriendo?');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedAthleteId]);
 
   const title = isAdmin
