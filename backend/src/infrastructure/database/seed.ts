@@ -137,6 +137,14 @@ async function seed() {
         ADD COLUMN IF NOT EXISTS password_hash TEXT
     `);
 
+    // Apply local-id sequence idempotently (in case schema was init-ed without 03_register.sql)
+    await client.query(`
+      CREATE SEQUENCE IF NOT EXISTS athletes_local_id_seq
+        START WITH 9000000000
+        INCREMENT BY 1
+        NO CYCLE
+    `);
+
     // Truncate in correct order (FK cascade)
     await client.query(
       'TRUNCATE TABLE laps, splits_metric, activities, gear, athletes RESTART IDENTITY CASCADE'

@@ -26,3 +26,15 @@ export class NotFoundError extends DomainError {
     super(`${resource} no encontrado`, 'NOT_FOUND', 404);
   }
 }
+
+export class ConflictError extends DomainError {
+  constructor(message: string) {
+    super(message, 'CONFLICT', 409);
+  }
+}
+
+export class ValidationError extends DomainError {
+  constructor(message: string) {
+    super(message, 'VALIDATION_ERROR', 400);
+  }
+}

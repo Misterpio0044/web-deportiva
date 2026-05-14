@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminRoute } from './components/AdminRoute';
 import { LoginPage } from './ui/pages/LoginPage';
+import { RegisterPage } from './ui/pages/RegisterPage';
 import { DashboardPage } from './ui/pages/DashboardPage';
 import { AdminAthletesPage } from './ui/pages/AdminAthletesPage';
 
@@ -9,8 +10,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Ruta pública — cualquiera puede entrar */}
+        {/* Rutas públicas — cualquiera puede entrar */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* Rutas protegidas — solo usuarios autenticados */}
         <Route element={<ProtectedRoute />}>

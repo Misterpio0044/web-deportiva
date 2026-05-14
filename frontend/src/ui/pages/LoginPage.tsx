@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../application/auth/useAuthStore';
 import { authApi } from '../../infrastructure/api/authApi';
 import { Button } from '@/components/ui/button';
@@ -81,6 +81,13 @@ export function LoginPage() {
                 {loading ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
+
+            <p className="mt-4 text-center text-sm text-slate-500">
+              ¿No tienes cuenta?{' '}
+              <Link to="/register" className="font-medium text-slate-900 hover:underline">
+                Regístrate
+              </Link>
+            </p>
           </CardContent>
         </Card>
 

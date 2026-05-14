@@ -5,6 +5,14 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface RegisterPayload {
+  firstname: string;
+  lastname: string;
+  username: string;
+  email: string;
+  password: string;
+}
+
 export interface AuthUser {
   id: number;
   email: string;
@@ -21,6 +29,9 @@ export interface LoginResponse {
 export const authApi = {
   login: (payload: LoginPayload) =>
     apiClient.post<LoginResponse>('/auth/login', payload).then((r) => r.data),
+
+  register: (payload: RegisterPayload) =>
+    apiClient.post<LoginResponse>('/auth/register', payload).then((r) => r.data),
 
   me: () => apiClient.get<{ user: AuthUser }>('/auth/me').then((r) => r.data),
 };
