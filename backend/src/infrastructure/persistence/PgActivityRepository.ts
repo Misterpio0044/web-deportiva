@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { ActivityRepository, DashboardData, WeeklyVolume, PaceDataPoint, HeartRateZone, HeatmapDay } from '../../domain/activity/ActivityRepository';
+import { ActivityRepository, DashboardData, WeeklyVolume, MonthlyDistance, HeartRateZone, HeatmapDay } from '../../domain/activity/ActivityRepository';
 import { Activity } from '../../domain/activity/Activity';
 
 function rowToActivity(row: Record<string, unknown>): Activity {
@@ -60,9 +60,9 @@ export class PgActivityRepository implements ActivityRepository {
   }
 
   async getDashboardData(athleteId: number): Promise<DashboardData> {
-    const [weekly, pace, hrZones, heatmap, recent, totals] = await Promise.all([
+    const [weekly, monthly, hrZones, heatmap, recent, totals] = await Promise.all([
       this.getWeeklyVolume(athleteId),
-      this.getPaceOverTime(athleteId),
+      this.getMonthlyDistance(athleteId),
       this.getHeartRateZones(athleteId),
       this.getActivityHeatmap(athleteId),
       this.getRecentActivities(athleteId),
@@ -71,7 +71,7 @@ export class PgActivityRepository implements ActivityRepository {
 
     return {
       weeklyVolume: weekly,
-      paceOverTime: pace,
+      monthlyDistance: monthly,
       heartRateZones: hrZones,
       activityHeatmap: heatmap,
       recentActivities: recent,
@@ -80,9 +80,9 @@ export class PgActivityRepository implements ActivityRepository {
   }
 
   async getGlobalDashboardData(): Promise<DashboardData> {
-    const [weekly, pace, hrZones, heatmap, recent, totals] = await Promise.all([
+    const [weekly, monthly, hrZones, heatmap, recent, totals] = await Promise.all([
       this.getWeeklyVolume(null),
-      this.getPaceOverTime(null),
+      this.getMonthlyDistance(null),
       this.getHeartRateZones(null),
       this.getActivityHeatmap(null),
       this.getRecentActivities(null),
@@ -91,7 +91,7 @@ export class PgActivityRepository implements ActivityRepository {
 
     return {
       weeklyVolume: weekly,
-      paceOverTime: pace,
+      monthlyDistance: monthly,
       heartRateZones: hrZones,
       activityHeatmap: heatmap,
       recentActivities: recent,
@@ -130,27 +130,25 @@ export class PgActivityRepository implements ActivityRepository {
     }));
   }
 
-  private async getPaceOverTime(athleteId: number | null): Promise<PaceDataPoint[]> {
+  private async getMonthlyDistance(athleteId: number | null): Promise<MonthlyDistance[]> {
     const athleteFilter = athleteId ? 'AND athlete_id = $1' : '';
     const params: unknown[] = athleteId ? [athleteId] : [];
 
     const { rows } = await this.pool.query(
       `SELECT
-         to_char(start_date_local, 'YYYY-MM-DD') AS date,
-         moving_time / (distance / 1000.0) AS pace_sec_per_km
+         to_char(date_trunc('month', start_date_local), 'YYYY-MM') AS month,
+         ROUND(SUM(distance) / 1000.0, 2) AS total_distance_km
        FROM activities
-       WHERE distance > 0 ${athleteFilter}
-       ORDER BY start_date_local DESC
-       LIMIT 60`,
+       WHERE start_date_local >= NOW() - INTERVAL '12 months' ${athleteFilter}
+       GROUP BY date_trunc('month', start_date_local)
+       ORDER BY date_trunc('month', start_date_local)`,
       params,
     );
 
-    return rows
-      .map((r) => ({
-        date: r.date,
-        paceSecPerKm: parseFloat(r.pace_sec_per_km),
-      }))
-      .reverse();
+    return rows.map((r) => ({
+      month: r.month,
+      totalDistanceKm: parseFloat(r.total_distance_km),
+    }));
   }
 
   private async getHeartRateZones(athleteId: number | null): Promise<HeartRateZone[]> {

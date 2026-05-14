@@ -1,6 +1,6 @@
 import type { DashboardData } from '../../infrastructure/api/dashboardApi';
 import { WeeklyVolumeChart } from '../molecules/WeeklyVolumeChart';
-import { PaceOverTimeChart } from '../molecules/PaceOverTimeChart';
+import { MonthlyDistanceChart } from '../molecules/MonthlyDistanceChart';
 import { HeartRateZonesChart } from '../molecules/HeartRateZonesChart';
 import { ActivityHeatmap } from '../molecules/ActivityHeatmap';
 import { RecentActivitiesTable } from '../molecules/RecentActivitiesTable';
@@ -40,7 +40,7 @@ export function DashboardGrid({ data }: Props) {
       {/* Charts grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <WeeklyVolumeChart data={data.weeklyVolume} />
-        <PaceOverTimeChart data={data.paceOverTime} />
+        <MonthlyDistanceChart data={data.monthlyDistance} />
         <HeartRateZonesChart data={data.heartRateZones} />
         <ActivityHeatmap data={data.activityHeatmap} />
       </div>

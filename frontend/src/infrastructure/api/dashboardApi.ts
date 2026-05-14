@@ -6,9 +6,9 @@ export interface WeeklyVolume {
   activityCount: number;
 }
 
-export interface PaceDataPoint {
-  date: string;
-  paceSecPerKm: number;
+export interface MonthlyDistance {
+  month: string;
+  totalDistanceKm: number;
 }
 
 export interface HeartRateZone {
@@ -35,7 +35,7 @@ export interface RecentActivity {
 
 export interface DashboardData {
   weeklyVolume: WeeklyVolume[];
-  paceOverTime: PaceDataPoint[];
+  monthlyDistance: MonthlyDistance[];
   heartRateZones: HeartRateZone[];
   activityHeatmap: HeatmapDay[];
   recentActivities: RecentActivity[];
