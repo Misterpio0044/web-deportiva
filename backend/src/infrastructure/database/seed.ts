@@ -1,6 +1,5 @@
 import { Pool } from 'pg';
 import bcrypt from 'bcrypt';
-import { faker } from '@faker-js/faker/locale/es';
 import dotenv from 'dotenv';
 
 dotenv.config();
