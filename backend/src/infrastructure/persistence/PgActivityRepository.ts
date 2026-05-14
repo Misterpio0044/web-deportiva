@@ -1,5 +1,12 @@
 import { Pool } from 'pg';
-import { ActivityRepository, DashboardData, WeeklyVolume, MonthlyDistance, HeartRateZone, HeatmapDay } from '../../domain/activity/ActivityRepository';
+import {
+  ActivityRepository,
+  DashboardData,
+  WeeklyVolume,
+  MonthlyDistance,
+  HeartRateZone,
+  HeatmapDay,
+} from '../../domain/activity/ActivityRepository';
 import { Activity } from '../../domain/activity/Activity';
 
 function rowToActivity(row: Record<string, unknown>): Activity {
@@ -15,12 +22,16 @@ function rowToActivity(row: Record<string, unknown>): Activity {
     distance: parseFloat(row.distance as string),
     movingTime: row.moving_time as number,
     elapsedTime: row.elapsed_time as number,
-    totalElevationGain: row.total_elevation_gain ? parseFloat(row.total_elevation_gain as string) : undefined,
+    totalElevationGain: row.total_elevation_gain
+      ? parseFloat(row.total_elevation_gain as string)
+      : undefined,
     averageSpeed: row.average_speed ? parseFloat(row.average_speed as string) : undefined,
     maxSpeed: row.max_speed ? parseFloat(row.max_speed as string) : undefined,
     averageCadence: row.average_cadence ? parseFloat(row.average_cadence as string) : undefined,
     hasHeartrate: row.has_heartrate as boolean,
-    averageHeartrate: row.average_heartrate ? parseFloat(row.average_heartrate as string) : undefined,
+    averageHeartrate: row.average_heartrate
+      ? parseFloat(row.average_heartrate as string)
+      : undefined,
     maxHeartrate: row.max_heartrate ? parseFloat(row.max_heartrate as string) : undefined,
     averageTemp: row.average_temp ? parseFloat(row.average_temp as string) : undefined,
     sufferScore: row.suffer_score ? parseFloat(row.suffer_score as string) : undefined,
@@ -41,7 +52,7 @@ export class PgActivityRepository implements ActivityRepository {
   async findByAthleteId(athleteId: number, limit = 100): Promise<Activity[]> {
     const { rows } = await this.pool.query(
       `SELECT * FROM activities WHERE athlete_id = $1 ORDER BY start_date_local DESC LIMIT $2`,
-      [athleteId, limit],
+      [athleteId, limit]
     );
     return rows.map(rowToActivity);
   }
@@ -54,7 +65,7 @@ export class PgActivityRepository implements ActivityRepository {
   async findAll(limit = 100): Promise<Activity[]> {
     const { rows } = await this.pool.query(
       `SELECT * FROM activities ORDER BY start_date_local DESC LIMIT $1`,
-      [limit],
+      [limit]
     );
     return rows.map(rowToActivity);
   }
@@ -120,7 +131,7 @@ export class PgActivityRepository implements ActivityRepository {
          ${athleteFilter}
        GROUP BY date_trunc('week', start_date_local)
        ORDER BY date_trunc('week', start_date_local)`,
-      params,
+      params
     );
 
     return rows.map((r) => ({
@@ -142,7 +153,7 @@ export class PgActivityRepository implements ActivityRepository {
        WHERE start_date_local >= NOW() - INTERVAL '12 months' ${athleteFilter}
        GROUP BY date_trunc('month', start_date_local)
        ORDER BY date_trunc('month', start_date_local)`,
-      params,
+      params
     );
 
     return rows.map((r) => ({
@@ -170,7 +181,7 @@ export class PgActivityRepository implements ActivityRepository {
        WHERE a.has_heartrate = TRUE ${athleteFilter}
        GROUP BY zone
        ORDER BY zone`,
-      params,
+      params
     );
 
     // Ensure all 5 zones are present
@@ -190,7 +201,7 @@ export class PgActivityRepository implements ActivityRepository {
        WHERE start_date_local >= NOW() - INTERVAL '365 days' ${athleteFilter}
        GROUP BY start_date_local::date
        ORDER BY start_date_local::date`,
-      params,
+      params
     );
 
     return rows.map((r) => ({ date: r.date, count: parseInt(r.count, 10) }));
@@ -203,7 +214,7 @@ export class PgActivityRepository implements ActivityRepository {
     const { rows } = await this.pool.query(
       `SELECT * FROM activities ${athleteFilter}
        ORDER BY start_date_local DESC LIMIT 10`,
-      params,
+      params
     );
 
     return rows.map(rowToActivity);
@@ -223,7 +234,7 @@ export class PgActivityRepository implements ActivityRepository {
          COUNT(*) AS total_activities,
          COALESCE(AVG(moving_time / NULLIF(distance / 1000.0, 0)), 0) AS avg_pace
        FROM activities ${athleteFilter}`,
-      params,
+      params
     );
 
     const row = rows[0];

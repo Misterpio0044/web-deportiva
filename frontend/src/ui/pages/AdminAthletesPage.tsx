@@ -20,7 +20,11 @@ export function AdminAthletesPage() {
   }, []);
 
   async function handleDelete(athlete: AthletePublic) {
-    if (!confirm(`¿Eliminar a ${athlete.firstname} ${athlete.lastname}? Esta acción no se puede deshacer.`)) {
+    if (
+      !confirm(
+        `¿Eliminar a ${athlete.firstname} ${athlete.lastname}? Esta acción no se puede deshacer.`
+      )
+    ) {
       return;
     }
     setDeletingId(athlete.id);

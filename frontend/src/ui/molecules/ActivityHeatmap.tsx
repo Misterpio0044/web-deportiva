@@ -12,7 +12,9 @@ function getColor(count: number): string {
 }
 
 /** Build a full 52-week grid from today backwards */
-function buildGrid(data: HeatmapDay[]): Array<{ date: string; count: number; dayOfWeek: number }[]> {
+function buildGrid(
+  data: HeatmapDay[]
+): Array<{ date: string; count: number; dayOfWeek: number }[]> {
   const countMap = new Map(data.map((d) => [d.date, d.count]));
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -54,7 +56,11 @@ export function ActivityHeatmap({ data }: Props) {
               {week.map((day) => (
                 <div
                   key={day.date}
-                  title={day.count > 0 ? `${day.date}: ${day.count} actividad${day.count > 1 ? 'es' : ''}` : day.date}
+                  title={
+                    day.count > 0
+                      ? `${day.date}: ${day.count} actividad${day.count > 1 ? 'es' : ''}`
+                      : day.date
+                  }
                   className={`h-[10px] w-[10px] rounded-sm ${getColor(day.count)} transition-colors`}
                 />
               ))}

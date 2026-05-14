@@ -3,9 +3,7 @@ interface LoadingSkeletonProps {
 }
 
 export function LoadingSkeleton({ className = 'h-48' }: LoadingSkeletonProps) {
-  return (
-    <div className={`animate-pulse rounded-xl bg-slate-100 ${className}`} />
-  );
+  return <div className={`animate-pulse rounded-xl bg-slate-100 ${className}`} />;
 }
 
 export function DashboardSkeleton() {

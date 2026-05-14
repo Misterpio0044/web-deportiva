@@ -39,7 +39,7 @@ export class PgAthleteRepository implements AthleteRepository {
               profile_medium_url, max_heartrate, resting_heartrate, weight,
               created_at, updated_at
        FROM athletes
-       ORDER BY created_at ASC`,
+       ORDER BY created_at ASC`
     );
     return rows.map((r) => ({
       id: r.id,

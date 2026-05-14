@@ -17,7 +17,9 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
     // Admin can query global or a specific athlete's dashboard
     if (req.user!.role === 'admin') {
-      const rawId = Array.isArray(req.query.athleteId) ? req.query.athleteId[0] : req.query.athleteId;
+      const rawId = Array.isArray(req.query.athleteId)
+        ? req.query.athleteId[0]
+        : req.query.athleteId;
       const targetAthleteId = rawId ? parseInt(rawId as string, 10) : null;
 
       if (targetAthleteId) {

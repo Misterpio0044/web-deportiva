@@ -139,7 +139,9 @@ async function seed() {
     `);
 
     // Truncate in correct order (FK cascade)
-    await client.query('TRUNCATE TABLE laps, splits_metric, activities, gear, athletes RESTART IDENTITY CASCADE');
+    await client.query(
+      'TRUNCATE TABLE laps, splits_metric, activities, gear, athletes RESTART IDENTITY CASCADE'
+    );
     console.log('[seed] Tablas limpiadas');
 
     // ── 1. Athletes ──────────────────────────────────────────────────────────
@@ -161,7 +163,7 @@ async function seed() {
           spec.weight,
           spec.role,
           hash,
-        ],
+        ]
       );
     }
     console.log('[seed] 3 atletas insertados');
@@ -181,15 +183,7 @@ async function seed() {
         await client.query(
           `INSERT INTO gear (id, athlete_id, name, is_primary, distance, brand, model, created_at)
            VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())`,
-          [
-            gearId,
-            spec.id,
-            name,
-            isPrimary,
-            Math.round(rnd(200, 900) * 1000) / 1000,
-            brand,
-            name,
-          ],
+          [gearId, spec.id, name, isPrimary, Math.round(rnd(200, 900) * 1000) / 1000, brand, name]
         );
         athleteGearMap[spec.id].push(gearId);
         gearCounter++;
@@ -282,7 +276,7 @@ async function seed() {
             Math.round(lon * 1e7) / 1e7,
             Math.round((lat - rnd(0.005, 0.02)) * 1e7) / 1e7,
             Math.round((lon + rnd(0.005, 0.02)) * 1e7) / 1e7,
-          ],
+          ]
         );
 
         // ── 3a. splits_metric (one per km) ──────────────────────────────────
@@ -309,7 +303,7 @@ async function seed() {
               Math.round(splitSpeed * 1000) / 1000,
               splitHr,
               hrZone(splitHr, spec.maxHeartrate),
-            ],
+            ]
           );
         }
 
@@ -336,19 +330,21 @@ async function seed() {
               `Vuelta ${lap}`,
               lapDist,
               lapTime,
-              Math.round(elevationGain / numLaps * 10) / 10,
+              Math.round((elevationGain / numLaps) * 10) / 10,
               Math.round(lapSpeed * 1000) / 1000,
               Math.round(lapSpeed * rnd(1.05, 1.2) * 1000) / 1000,
               lapHr,
               cadence,
-            ],
+            ]
           );
         }
 
         activityId++;
       }
     }
-    console.log(`[seed] ${ACTIVITIES_PER_ATHLETE * ATHLETES.length} actividades insertadas con splits y laps`);
+    console.log(
+      `[seed] ${ACTIVITIES_PER_ATHLETE * ATHLETES.length} actividades insertadas con splits y laps`
+    );
 
     await client.query('COMMIT');
     console.log('[seed] ✅ Seed completado con éxito');

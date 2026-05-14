@@ -14,9 +14,18 @@ interface Props {
 }
 
 const MONTH_LABELS: Record<string, string> = {
-  '01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr',
-  '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Ago',
-  '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dic',
+  '01': 'Ene',
+  '02': 'Feb',
+  '03': 'Mar',
+  '04': 'Abr',
+  '05': 'May',
+  '06': 'Jun',
+  '07': 'Jul',
+  '08': 'Ago',
+  '09': 'Sep',
+  '10': 'Oct',
+  '11': 'Nov',
+  '12': 'Dic',
 };
 
 function formatMonth(yyyyMm: string): string {
@@ -32,7 +41,9 @@ export function MonthlyDistanceChart({ data }: Props) {
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h3 className="mb-4 text-sm font-semibold text-slate-700">Distancia mensual (últimos 12 meses)</h3>
+      <h3 className="mb-4 text-sm font-semibold text-slate-700">
+        Distancia mensual (últimos 12 meses)
+      </h3>
       <ResponsiveContainer width="100%" height={220}>
         <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
           <defs>

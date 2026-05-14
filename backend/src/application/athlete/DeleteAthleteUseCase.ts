@@ -5,7 +5,7 @@ import { NotFoundError } from '../../domain/shared/DomainError';
 export class DeleteAthleteUseCase {
   constructor(
     private readonly athleteRepo: AthleteRepository,
-    private readonly activityRepo: ActivityRepository,
+    private readonly activityRepo: ActivityRepository
   ) {}
 
   async execute(athleteId: number): Promise<void> {

@@ -39,7 +39,7 @@ export class LoginUseCase {
     const token = jwt.sign(
       { sub: athlete.id, email: athlete.email, role: athlete.role, firstname: athlete.firstname },
       secret,
-      { expiresIn: '8h' },
+      { expiresIn: '8h' }
     );
 
     return {

@@ -5,7 +5,7 @@ import { AthleteRepository } from '../../domain/athlete/AthleteRepository';
 export class GetAthleteDashboardUseCase {
   constructor(
     private readonly activityRepo: ActivityRepository,
-    private readonly athleteRepo: AthleteRepository,
+    private readonly athleteRepo: AthleteRepository
   ) {}
 
   async execute(athleteId: number): Promise<DashboardData> {

@@ -23,7 +23,10 @@ export function DashboardPage() {
 
   useEffect(() => {
     if (isAdmin) {
-      athletesApi.list().then(setAthletes).catch(() => {});
+      athletesApi
+        .list()
+        .then(setAthletes)
+        .catch(() => {});
     }
   }, [isAdmin]);
 
@@ -43,7 +46,8 @@ export function DashboardPage() {
       : 'Dashboard global'
     : `Hola, ${user?.firstname ?? 'atleta'} 👋`;
 
-  const description = isAdmin && !selectedAthleteId ? 'Datos agregados de todos los atletas' : undefined;
+  const description =
+    isAdmin && !selectedAthleteId ? 'Datos agregados de todos los atletas' : undefined;
 
   return (
     <AppShell>

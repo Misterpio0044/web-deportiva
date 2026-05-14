@@ -1,11 +1,4 @@
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { HeartRateZone } from '../../infrastructure/api/dashboardApi';
 
 interface Props {
@@ -51,7 +44,10 @@ export function HeartRateZonesChart({ data }: Props) {
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number | string | undefined, name: string) => [`${value ?? 0} actividades`, name]}
+            formatter={(value: number | string | undefined, name: string) => [
+              `${value ?? 0} actividades`,
+              name,
+            ]}
             contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }}
           />
           <Legend

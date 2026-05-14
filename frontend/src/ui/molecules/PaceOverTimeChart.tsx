@@ -37,7 +37,11 @@ export function PaceOverTimeChart({ data }: Props) {
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={chartData} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }} interval="preserveStartEnd" />
+          <XAxis
+            dataKey="date"
+            tick={{ fontSize: 10, fill: '#94a3b8' }}
+            interval="preserveStartEnd"
+          />
           <YAxis
             tick={{ fontSize: 11, fill: '#94a3b8' }}
             tickFormatter={secToMinKm}

@@ -11,7 +11,9 @@ router.use(authMiddleware);
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const activityRepo = new PgActivityRepository(pool);
-    const rawAthleteId = Array.isArray(req.query.athleteId) ? String(req.query.athleteId[0]) : req.query.athleteId as string | undefined;
+    const rawAthleteId = Array.isArray(req.query.athleteId)
+      ? String(req.query.athleteId[0])
+      : (req.query.athleteId as string | undefined);
     const requestedAthleteId = rawAthleteId ? parseInt(rawAthleteId, 10) : null;
 
     if (req.user!.role === 'user') {
