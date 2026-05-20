@@ -5,6 +5,7 @@ import {
   CreateAthleteFromStravaInput,
   UpdateStravaTokensInput,
   UpdateStravaProfileInput,
+  UpdateProfileInput,
   RecordSyncSuccessInput,
   RecordSyncErrorInput,
 } from '../../domain/athlete/AthleteRepository';
@@ -173,6 +174,37 @@ export class PgAthleteRepository implements AthleteRepository {
         input.lastStravaSyncAt ?? null,
         athleteId,
       ]
+    );
+  }
+
+  async updateProfile(athleteId: number, input: UpdateProfileInput): Promise<Athlete> {
+    const { rows } = await this.pool.query(
+      `UPDATE athletes
+         SET firstname = COALESCE($1, firstname),
+             lastname = COALESCE($2, lastname),
+             username = COALESCE($3, username),
+             email = COALESCE($4, email),
+             updated_at = NOW()
+       WHERE id = $5
+       RETURNING *`,
+      [
+        input.firstname ?? null,
+        input.lastname ?? null,
+        input.username ?? null,
+        input.email ?? null,
+        athleteId,
+      ]
+    );
+    return rowToAthlete(rows[0]);
+  }
+
+  async updatePasswordHash(athleteId: number, passwordHash: string): Promise<void> {
+    await this.pool.query(
+      `UPDATE athletes
+         SET password_hash = $1,
+             updated_at = NOW()
+       WHERE id = $2`,
+      [passwordHash, athleteId]
     );
   }
 
