@@ -76,11 +76,7 @@ async function parseError(res: Response, fallback: string): Promise<StravaApiErr
     );
   }
   if (res.status === 401) {
-    return new StravaApiError(
-      'Token de Strava inválido o expirado',
-      'STRAVA_UNAUTHORIZED',
-      401
-    );
+    return new StravaApiError('Token de Strava inválido o expirado', 'STRAVA_UNAUTHORIZED', 401);
   }
   const detail =
     body && typeof body === 'object' && 'message' in body

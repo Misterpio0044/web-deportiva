@@ -96,18 +96,20 @@ export function ConnectStravaCard({ onSyncComplete }: Props) {
       );
       onSyncComplete?.();
     } catch (err) {
-      const apiErr = err as { response?: { data?: { error?: { message?: string }; message?: string } } };
+      const apiErr = err as {
+        response?: { data?: { error?: { message?: string }; message?: string } };
+      };
       const apiMsg =
-        apiErr?.response?.data?.error?.message ??
-        apiErr?.response?.data?.message ??
-        '';
+        apiErr?.response?.data?.error?.message ?? apiErr?.response?.data?.message ?? '';
       const isRevoked = /revocad/i.test(apiMsg);
       if (isRevoked) {
         setStatus(EMPTY_STATUS);
         setError('El acceso a Strava ha sido revocado. Vuelve a conectar tu cuenta.');
       } else {
         setStatus((s) =>
-          s ? { ...s, lastSyncStatus: 'error', lastSyncError: apiMsg || 'Error de sincronización' } : s
+          s
+            ? { ...s, lastSyncStatus: 'error', lastSyncError: apiMsg || 'Error de sincronización' }
+            : s
         );
         setError(apiMsg || 'Falló la sincronización con Strava. Inténtalo de nuevo.');
       }
@@ -130,7 +132,9 @@ export function ConnectStravaCard({ onSyncComplete }: Props) {
   if (loading) {
     return (
       <Card>
-        <CardContent className="py-6 text-sm text-slate-500">Cargando estado de Strava…</CardContent>
+        <CardContent className="py-6 text-sm text-slate-500">
+          Cargando estado de Strava…
+        </CardContent>
       </Card>
     );
   }
@@ -219,9 +223,7 @@ export function ConnectStravaCard({ onSyncComplete }: Props) {
         {message && (
           <p className="rounded-md bg-emerald-50 px-3 py-2 text-xs text-emerald-700">{message}</p>
         )}
-        {error && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>
-        )}
+        {error && <p className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>}
       </CardContent>
     </Card>
   );

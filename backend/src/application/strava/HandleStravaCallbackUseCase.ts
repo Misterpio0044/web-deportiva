@@ -1,9 +1,5 @@
 import jwt from 'jsonwebtoken';
-import {
-  ConflictError,
-  NotFoundError,
-  UnauthorizedError,
-} from '../../domain/shared/DomainError';
+import { ConflictError, NotFoundError, UnauthorizedError } from '../../domain/shared/DomainError';
 import { AthleteRepository } from '../../domain/athlete/AthleteRepository';
 import { Athlete } from '../../domain/athlete/Athlete';
 import { StravaApiClient } from '../../infrastructure/strava/StravaApiClient';
@@ -88,9 +84,7 @@ export class HandleStravaCallbackUseCase {
 
       const conflicting = await this.athleteRepo.findByStravaId(stravaAthlete.id);
       if (conflicting && conflicting.id !== local.id) {
-        throw new ConflictError(
-          'Esta cuenta de Strava ya está vinculada a otro usuario'
-        );
+        throw new ConflictError('Esta cuenta de Strava ya está vinculada a otro usuario');
       }
 
       wasFirstLink = !local.stravaId;

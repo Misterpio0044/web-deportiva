@@ -29,7 +29,8 @@ function rowToAthlete(row: Record<string, unknown>): Athlete {
     stravaRefreshToken: (row.strava_refresh_token as string | undefined) ?? undefined,
     stravaTokenExpiresAt: (row.strava_token_expires_at as Date | undefined) ?? undefined,
     lastStravaSyncAt: (row.last_strava_sync_at as Date | undefined) ?? undefined,
-    lastStravaSyncStatus: (row.last_strava_sync_status as 'success' | 'error' | undefined) ?? undefined,
+    lastStravaSyncStatus:
+      (row.last_strava_sync_status as 'success' | 'error' | undefined) ?? undefined,
     lastStravaSyncError: (row.last_strava_sync_error as string | undefined) ?? undefined,
     lastStravaSyncCreated:
       row.last_strava_sync_created !== null && row.last_strava_sync_created !== undefined
