@@ -198,6 +198,16 @@ export class PgAthleteRepository implements AthleteRepository {
     return rowToAthlete(rows[0]);
   }
 
+  async updatePasswordHash(athleteId: number, passwordHash: string): Promise<void> {
+    await this.pool.query(
+      `UPDATE athletes
+         SET password_hash = $1,
+             updated_at = NOW()
+       WHERE id = $2`,
+      [passwordHash, athleteId]
+    );
+  }
+
   async unlinkStravaAccount(athleteId: number): Promise<void> {
     await this.pool.query(
       `UPDATE athletes

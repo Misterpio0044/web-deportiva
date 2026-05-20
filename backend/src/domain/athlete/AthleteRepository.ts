@@ -70,6 +70,7 @@ export interface AthleteRepository {
   ): Promise<void>;
   updateStravaProfile(athleteId: number, input: UpdateStravaProfileInput): Promise<void>;
   updateProfile(athleteId: number, input: UpdateProfileInput): Promise<Athlete>;
+  updatePasswordHash(athleteId: number, passwordHash: string): Promise<void>;
   unlinkStravaAccount(athleteId: number): Promise<void>;
   recordSyncSuccess(athleteId: number, input: RecordSyncSuccessInput): Promise<void>;
   recordSyncError(athleteId: number, input: RecordSyncErrorInput): Promise<void>;

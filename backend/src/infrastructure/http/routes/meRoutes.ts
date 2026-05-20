@@ -4,6 +4,7 @@ import { pool } from '../../database/pool';
 import { PgAthleteRepository } from '../../persistence/PgAthleteRepository';
 import { GetMyProfileUseCase } from '../../../application/me/GetMyProfileUseCase';
 import { UpdateMyProfileUseCase } from '../../../application/me/UpdateMyProfileUseCase';
+import { ChangeMyPasswordUseCase } from '../../../application/me/ChangeMyPasswordUseCase';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { UnauthorizedError } from '../../../domain/shared/DomainError';
 
@@ -27,6 +28,14 @@ const updateProfileSchema = z
   .refine((data) => Object.values(data).some((v) => v !== undefined), {
     message: 'Debes enviar al menos un campo a modificar',
   });
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'La contraseña actual es obligatoria'),
+  newPassword: z
+    .string()
+    .min(6, 'La contraseña debe tener al menos 6 caracteres')
+    .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
+});
+
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -45,6 +54,19 @@ router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) throw new UnauthorizedError();
     const body = updateProfileSchema.parse(req.body);
     const athleteRepo = new PgAthleteRepository(pool);
+router.post('/password', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) throw new UnauthorizedError();
+    const body = changePasswordSchema.parse(req.body);
+    const athleteRepo = new PgAthleteRepository(pool);
+    const useCase = new ChangeMyPasswordUseCase(athleteRepo);
+    await useCase.execute(req.user.sub, body);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
     const useCase = new UpdateMyProfileUseCase(athleteRepo);
     const result = await useCase.execute(req.user.sub, body);
     res.status(200).json(result);
