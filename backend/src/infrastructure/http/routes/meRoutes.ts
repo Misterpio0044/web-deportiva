@@ -36,7 +36,6 @@ const changePasswordSchema = z.object({
     .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
 });
 
-
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) throw new UnauthorizedError();
@@ -54,18 +53,18 @@ router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) throw new UnauthorizedError();
     const body = updateProfileSchema.parse(req.body);
     const athleteRepo = new PgAthleteRepository(pool);
-router.post('/password', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!req.user) throw new UnauthorizedError();
-    const body = changePasswordSchema.parse(req.body);
-    const athleteRepo = new PgAthleteRepository(pool);
-    const useCase = new ChangeMyPasswordUseCase(athleteRepo);
-    await useCase.execute(req.user.sub, body);
-    res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
-});
+    router.post('/password', async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        if (!req.user) throw new UnauthorizedError();
+        const body = changePasswordSchema.parse(req.body);
+        const athleteRepo = new PgAthleteRepository(pool);
+        const useCase = new ChangeMyPasswordUseCase(athleteRepo);
+        await useCase.execute(req.user.sub, body);
+        res.status(204).send();
+      } catch (err) {
+        next(err);
+      }
+    });
 
     const useCase = new UpdateMyProfileUseCase(athleteRepo);
     const result = await useCase.execute(req.user.sub, body);

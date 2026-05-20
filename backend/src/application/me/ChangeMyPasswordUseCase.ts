@@ -1,10 +1,6 @@
 import bcrypt from 'bcrypt';
 import { AthleteRepository } from '../../domain/athlete/AthleteRepository';
-import {
-  NotFoundError,
-  UnauthorizedError,
-  ValidationError,
-} from '../../domain/shared/DomainError';
+import { NotFoundError, UnauthorizedError, ValidationError } from '../../domain/shared/DomainError';
 
 export interface ChangeMyPasswordInput {
   currentPassword: string;

@@ -6,13 +6,7 @@ import { Navbar } from '../organisms/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export function SettingsPage() {
   const user = useAuthStore((s) => s.user);
@@ -248,9 +242,7 @@ export function SettingsPage() {
                   autoComplete="new-password"
                   disabled={!hasPasswordLocal}
                 />
-                <p className="text-xs text-slate-500">
-                  Mínimo 6 caracteres y al menos un número.
-                </p>
+                <p className="text-xs text-slate-500">Mínimo 6 caracteres y al menos un número.</p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="confirmPassword">Repetir nueva contraseña</Label>
