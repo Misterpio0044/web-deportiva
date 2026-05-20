@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../application/auth/useAuthStore';
 import { authApi } from '../../infrastructure/api/authApi';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [searchParams] = useSearchParams();
+  const [error, setError] = useState(() => {
+    const stravaError = searchParams.get('stravaError');
+    return stravaError ? `Error al conectar con Strava: ${decodeURIComponent(stravaError)}` : '';
+  });
   const [loading, setLoading] = useState(false);
 
   const login = useAuthStore((s) => s.login);

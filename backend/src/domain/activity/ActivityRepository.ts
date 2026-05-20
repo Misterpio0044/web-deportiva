@@ -32,6 +32,11 @@ export interface DashboardData {
   averagePaceSecPerKm: number;
 }
 
+export interface UpsertManyResult {
+  created: number;
+  updated: number;
+}
+
 export interface ActivityRepository {
   findByAthleteId(athleteId: number, limit?: number): Promise<Activity[]>;
   findById(id: number): Promise<Activity | null>;
@@ -39,4 +44,5 @@ export interface ActivityRepository {
   getDashboardData(athleteId: number): Promise<DashboardData>;
   getGlobalDashboardData(): Promise<DashboardData>;
   deleteByAthleteId(athleteId: number): Promise<void>;
+  upsertMany(activities: Activity[]): Promise<UpsertManyResult>;
 }

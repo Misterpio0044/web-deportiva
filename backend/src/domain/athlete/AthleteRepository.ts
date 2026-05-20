@@ -9,11 +9,61 @@ export interface CreateAthleteInput {
   role?: 'admin' | 'user';
 }
 
+export interface CreateAthleteFromStravaInput {
+  stravaId: number;
+  firstname: string;
+  lastname: string;
+  username: string;
+  profileMediumUrl?: string;
+  weight?: number;
+  scope: string;
+  accessToken: string;
+  refreshToken: string;
+  tokenExpiresAt: Date;
+}
+
+export interface UpdateStravaTokensInput {
+  accessToken: string;
+  refreshToken: string;
+  tokenExpiresAt: Date;
+  scope?: string;
+}
+
+export interface UpdateStravaProfileInput {
+  firstname?: string;
+  lastname?: string;
+  profileMediumUrl?: string;
+  weight?: number;
+  lastStravaSyncAt?: Date;
+}
+
+export interface RecordSyncSuccessInput {
+  at: Date;
+  created: number;
+  updated: number;
+}
+
+export interface RecordSyncErrorInput {
+  at: Date;
+  message: string;
+}
+
 export interface AthleteRepository {
   findById(id: number): Promise<Athlete | null>;
   findByEmail(email: string): Promise<Athlete | null>;
   findByUsername(username: string): Promise<Athlete | null>;
+  findByStravaId(stravaId: number): Promise<Athlete | null>;
   findAll(): Promise<AthletePublic[]>;
   create(input: CreateAthleteInput): Promise<Athlete>;
+  createFromStrava(input: CreateAthleteFromStravaInput): Promise<Athlete>;
+  updateStravaTokens(athleteId: number, input: UpdateStravaTokensInput): Promise<void>;
+  linkStravaAccount(
+    athleteId: number,
+    input: UpdateStravaTokensInput & { stravaId: number }
+  ): Promise<void>;
+  updateStravaProfile(athleteId: number, input: UpdateStravaProfileInput): Promise<void>;
+  unlinkStravaAccount(athleteId: number): Promise<void>;
+  recordSyncSuccess(athleteId: number, input: RecordSyncSuccessInput): Promise<void>;
+  recordSyncError(athleteId: number, input: RecordSyncErrorInput): Promise<void>;
   deleteById(id: number): Promise<void>;
 }
