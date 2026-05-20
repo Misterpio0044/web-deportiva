@@ -37,6 +37,13 @@ export interface UpdateStravaProfileInput {
   lastStravaSyncAt?: Date;
 }
 
+export interface UpdateProfileInput {
+  firstname?: string;
+  lastname?: string;
+  username?: string;
+  email?: string;
+}
+
 export interface RecordSyncSuccessInput {
   at: Date;
   created: number;
@@ -62,6 +69,7 @@ export interface AthleteRepository {
     input: UpdateStravaTokensInput & { stravaId: number }
   ): Promise<void>;
   updateStravaProfile(athleteId: number, input: UpdateStravaProfileInput): Promise<void>;
+  updateProfile(athleteId: number, input: UpdateProfileInput): Promise<Athlete>;
   unlinkStravaAccount(athleteId: number): Promise<void>;
   recordSyncSuccess(athleteId: number, input: RecordSyncSuccessInput): Promise<void>;
   recordSyncError(athleteId: number, input: RecordSyncErrorInput): Promise<void>;

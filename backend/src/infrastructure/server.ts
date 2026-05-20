@@ -7,6 +7,7 @@ import authRoutes from './http/routes/authRoutes';
 import athleteRoutes from './http/routes/athleteRoutes';
 import activityRoutes from './http/routes/activityRoutes';
 import dashboardRoutes from './http/routes/dashboardRoutes';
+import meRoutes from './http/routes/meRoutes';
 import { stravaAuthRouter, stravaActionRouter } from './http/routes/stravaRoutes';
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.get('/', (_req: Request, res: Response) => {
 // ─── routes ──────────────────────────────────────────────────────────────────
 app.use('/api/auth/strava', stravaAuthRouter);
 app.use('/api/auth', authRoutes);
+app.use('/api/me', meRoutes);
 app.use('/api/athletes', athleteRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/dashboard', dashboardRoutes);
