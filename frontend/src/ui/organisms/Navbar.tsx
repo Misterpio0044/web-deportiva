@@ -6,7 +6,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
@@ -60,7 +59,9 @@ export function Navbar() {
                 <User size={14} />
               </div>
               <div className="hidden text-left sm:block">
-                <p className="text-sm font-medium text-slate-800">{user?.firstname}</p>
+                <p className="text-sm font-medium text-slate-800">
+                  {user?.firstname} {user?.lastname}
+                </p>
                 <p className="text-xs text-slate-400">
                   {user?.role === 'admin' ? (
                     <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
@@ -75,10 +76,6 @@ export function Navbar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-44">
-            <DropdownMenuLabel>
-              {user?.firstname} {user?.lastname}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => navigate('/settings')}>
               <Settings size={14} />
               Ajustes

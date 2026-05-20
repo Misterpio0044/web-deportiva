@@ -33,11 +33,24 @@ function formatMonth(yyyyMm: string): string {
   return MONTH_LABELS[mm] ?? yyyyMm;
 }
 
+function buildFullYear(data: MonthlyDistance[]): { label: string; km: number }[] {
+  // Anchor to the last month in the data, or current month if no data
+  const anchor =
+    data.length > 0
+      ? new Date(data[data.length - 1].month + '-01')
+      : new Date();
+
+  const map = new Map(data.map((d) => [d.month, d.totalDistanceKm]));
+
+  return Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(anchor.getFullYear(), anchor.getMonth() - 11 + i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    return { label: formatMonth(key), km: map.get(key) ?? 0 };
+  });
+}
+
 export function MonthlyDistanceChart({ data }: Props) {
-  const chartData = data.map((d) => ({
-    label: formatMonth(d.month),
-    km: d.totalDistanceKm,
-  }));
+  const chartData = buildFullYear(data);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -53,7 +66,11 @@ export function MonthlyDistanceChart({ data }: Props) {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+          <XAxis
+            dataKey="label"
+            interval={0}
+            tick={{ fontSize: 11, fill: '#94a3b8' }}
+          />
           <YAxis
             tick={{ fontSize: 11, fill: '#94a3b8' }}
             tickFormatter={(v: number) => `${v} km`}

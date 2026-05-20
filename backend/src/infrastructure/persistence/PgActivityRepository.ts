@@ -72,11 +72,12 @@ export class PgActivityRepository implements ActivityRepository {
   }
 
   async getDashboardData(athleteId: number): Promise<DashboardData> {
+    const anchor = await this.getAnchorDate(athleteId);
     const [weekly, monthly, hrZones, heatmap, recent, totals] = await Promise.all([
-      this.getWeeklyVolume(athleteId),
-      this.getMonthlyDistance(athleteId),
+      this.getWeeklyVolume(athleteId, anchor),
+      this.getMonthlyDistance(athleteId, anchor),
       this.getHeartRateZones(athleteId),
-      this.getActivityHeatmap(athleteId),
+      this.getActivityHeatmap(athleteId, anchor),
       this.getRecentActivities(athleteId),
       this.getTotals(athleteId),
     ]);
@@ -92,11 +93,12 @@ export class PgActivityRepository implements ActivityRepository {
   }
 
   async getGlobalDashboardData(): Promise<DashboardData> {
+    const anchor = await this.getAnchorDate(null);
     const [weekly, monthly, hrZones, heatmap, recent, totals] = await Promise.all([
-      this.getWeeklyVolume(null),
-      this.getMonthlyDistance(null),
+      this.getWeeklyVolume(null, anchor),
+      this.getMonthlyDistance(null, anchor),
       this.getHeartRateZones(null),
-      this.getActivityHeatmap(null),
+      this.getActivityHeatmap(null, anchor),
       this.getRecentActivities(null),
       this.getTotals(null),
     ]);
@@ -215,9 +217,23 @@ export class PgActivityRepository implements ActivityRepository {
 
   // ─── private query helpers ─────────────────────────────────────────────────
 
-  private async getWeeklyVolume(athleteId: number | null): Promise<WeeklyVolume[]> {
-    const athleteFilter = athleteId ? 'AND athlete_id = $2' : '';
-    const params: unknown[] = [16];
+  private async getAnchorDate(athleteId: number | null): Promise<Date> {
+    const athleteFilter = athleteId ? 'WHERE athlete_id = $1' : '';
+    const params: unknown[] = athleteId ? [athleteId] : [];
+    const { rows } = await this.pool.query(
+      `SELECT MAX(start_date_local) AS anchor FROM activities ${athleteFilter}`,
+      params
+    );
+    const max = rows[0]?.anchor as Date | null;
+    return max ?? new Date();
+  }
+
+  private async getWeeklyVolume(
+    athleteId: number | null,
+    anchor: Date
+  ): Promise<WeeklyVolume[]> {
+    const athleteFilter = athleteId ? 'AND athlete_id = $3' : '';
+    const params: unknown[] = [16, anchor];
     if (athleteId) params.push(athleteId);
 
     const { rows } = await this.pool.query(
@@ -226,7 +242,8 @@ export class PgActivityRepository implements ActivityRepository {
          SUM(distance) AS total_distance,
          COUNT(*) AS activity_count
        FROM activities
-       WHERE start_date_local >= NOW() - ($1 || ' weeks')::INTERVAL
+       WHERE start_date_local >= $2::timestamp - ($1 || ' weeks')::INTERVAL
+         AND start_date_local <= $2::timestamp
          ${athleteFilter}
        GROUP BY date_trunc('week', start_date_local)
        ORDER BY date_trunc('week', start_date_local)`,
@@ -240,16 +257,22 @@ export class PgActivityRepository implements ActivityRepository {
     }));
   }
 
-  private async getMonthlyDistance(athleteId: number | null): Promise<MonthlyDistance[]> {
-    const athleteFilter = athleteId ? 'AND athlete_id = $1' : '';
-    const params: unknown[] = athleteId ? [athleteId] : [];
+  private async getMonthlyDistance(
+    athleteId: number | null,
+    anchor: Date
+  ): Promise<MonthlyDistance[]> {
+    const athleteFilter = athleteId ? 'AND athlete_id = $2' : '';
+    const params: unknown[] = [anchor];
+    if (athleteId) params.push(athleteId);
 
     const { rows } = await this.pool.query(
       `SELECT
          to_char(date_trunc('month', start_date_local), 'YYYY-MM') AS month,
          ROUND(SUM(distance) / 1000.0, 2) AS total_distance_km
        FROM activities
-       WHERE start_date_local >= NOW() - INTERVAL '12 months' ${athleteFilter}
+       WHERE start_date_local >= $1::timestamp - INTERVAL '12 months'
+         AND start_date_local <= $1::timestamp
+         ${athleteFilter}
        GROUP BY date_trunc('month', start_date_local)
        ORDER BY date_trunc('month', start_date_local)`,
       params
@@ -288,16 +311,22 @@ export class PgActivityRepository implements ActivityRepository {
     return HR_ZONES.map((z) => ({ zone: z, count: resultMap.get(z) ?? 0 }));
   }
 
-  private async getActivityHeatmap(athleteId: number | null): Promise<HeatmapDay[]> {
-    const athleteFilter = athleteId ? 'AND athlete_id = $1' : '';
-    const params: unknown[] = athleteId ? [athleteId] : [];
+  private async getActivityHeatmap(
+    athleteId: number | null,
+    anchor: Date
+  ): Promise<HeatmapDay[]> {
+    const athleteFilter = athleteId ? 'AND athlete_id = $2' : '';
+    const params: unknown[] = [anchor];
+    if (athleteId) params.push(athleteId);
 
     const { rows } = await this.pool.query(
       `SELECT
          to_char(start_date_local::date, 'YYYY-MM-DD') AS date,
          COUNT(*) AS count
        FROM activities
-       WHERE start_date_local >= NOW() - INTERVAL '365 days' ${athleteFilter}
+       WHERE start_date_local >= $1::timestamp - INTERVAL '365 days'
+         AND start_date_local <= $1::timestamp
+         ${athleteFilter}
        GROUP BY start_date_local::date
        ORDER BY start_date_local::date`,
       params
