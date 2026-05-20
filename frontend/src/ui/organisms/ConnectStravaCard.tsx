@@ -36,8 +36,34 @@ export function ConnectStravaCard({ onSyncComplete }: Props) {
   const [status, setStatus] = useState<StravaStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [bannerMsg] = useState<{ error: string; message: string }>(() => {
+    const raw = sessionStorage.getItem('stravaBanner');
+    if (!raw) return { error: '', message: '' };
+    sessionStorage.removeItem('stravaBanner');
+    try {
+      const b = JSON.parse(raw) as {
+        isNewAccount: boolean;
+        activitiesSynced: number;
+        firstSyncFailed: boolean;
+      };
+      if (b.firstSyncFailed) {
+        return {
+          error: 'Tu cuenta se conectó, pero la primera sincronización falló. Pulsa "Sincronizar" para reintentar.',
+          message: '',
+        };
+      }
+      return {
+        error: '',
+        message: `${
+          b.isNewAccount ? 'Cuenta creada vía Strava. ' : ''
+        }Sincronizadas ${b.activitiesSynced} actividades.`,
+      };
+    } catch {
+      return { error: '', message: '' };
+    }
+  });
+  const [error, setError] = useState(bannerMsg.error);
+  const [message, setMessage] = useState(bannerMsg.message);
 
   useEffect(() => {
     stravaApi
@@ -45,32 +71,6 @@ export function ConnectStravaCard({ onSyncComplete }: Props) {
       .then(setStatus)
       .catch(() => setError('No se pudo cargar el estado de Strava'))
       .finally(() => setLoading(false));
-  }, []);
-
-  // Banner del efecto wow (primer sync tras OAuth)
-  useEffect(() => {
-    const raw = sessionStorage.getItem('stravaBanner');
-    if (!raw) return;
-    sessionStorage.removeItem('stravaBanner');
-    try {
-      const banner = JSON.parse(raw) as {
-        type: 'success' | 'warning';
-        isNewAccount: boolean;
-        activitiesSynced: number;
-        firstSyncFailed: boolean;
-      };
-      if (banner.firstSyncFailed) {
-        setError(
-          'Tu cuenta se conectó, pero la primera sincronización falló. Pulsa "Sincronizar" para reintentar.'
-        );
-      } else {
-        setMessage(
-          `${banner.isNewAccount ? 'Cuenta creada vía Strava. ' : ''}Sincronizadas ${banner.activitiesSynced} actividades.`
-        );
-      }
-    } catch {
-      // ignore
-    }
   }, []);
 
   async function handleSync() {
