@@ -74,8 +74,8 @@ export class HandleStravaCallbackUseCase {
 
     // 3. Resolver atleta destino
     let athlete: Athlete;
-    let isNewAccount = false;
-    let wasFirstLink = false;
+    const isNewAccount = false;
+    let wasFirstLink: boolean;
 
     if (statePayload.linkAthleteId) {
       // Flujo LINK: vincular Strava a una cuenta local existente
