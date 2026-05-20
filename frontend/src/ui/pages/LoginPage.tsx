@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../application/auth/useAuthStore';
 import { authApi } from '../../infrastructure/api/authApi';
 import { Button } from '@/components/ui/button';
@@ -12,9 +12,17 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
 
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const stravaError = searchParams.get('stravaError');
+    if (stravaError) {
+      setError(`Error al conectar con Strava: ${decodeURIComponent(stravaError)}`);
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

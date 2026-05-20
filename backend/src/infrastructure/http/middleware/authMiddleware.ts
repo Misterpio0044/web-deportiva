@@ -4,7 +4,7 @@ import { UnauthorizedError } from '../../../domain/shared/DomainError';
 
 export interface JwtPayload {
   sub: number;
-  email: string;
+  email: string | null;
   role: 'admin' | 'user';
   firstname: string;
 }

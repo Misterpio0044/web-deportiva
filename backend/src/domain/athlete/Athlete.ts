@@ -3,13 +3,26 @@ export interface Athlete {
   firstname: string;
   lastname: string;
   username: string;
-  email: string;
+  email: string | null;
   role: 'admin' | 'user';
-  passwordHash: string;
+  passwordHash: string | null;
   profileMediumUrl?: string;
   maxHeartrate?: number;
   restingHeartrate?: number;
   weight?: number;
+
+  // Strava OAuth link
+  stravaId?: number;
+  stravaScope?: string;
+  stravaAccessToken?: string;
+  stravaRefreshToken?: string;
+  stravaTokenExpiresAt?: Date;
+  lastStravaSyncAt?: Date;
+  lastStravaSyncStatus?: 'success' | 'error';
+  lastStravaSyncError?: string;
+  lastStravaSyncCreated?: number;
+  lastStravaSyncUpdated?: number;
+
   createdAt: Date;
   updatedAt: Date;
 }

@@ -15,7 +15,7 @@ export interface RegisterPayload {
 
 export interface AuthUser {
   id: number;
-  email: string;
+  email: string | null;
   role: 'admin' | 'user';
   firstname: string;
   lastname: string;

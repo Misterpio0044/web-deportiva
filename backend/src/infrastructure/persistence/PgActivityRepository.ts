@@ -6,6 +6,7 @@ import {
   MonthlyDistance,
   HeartRateZone,
   HeatmapDay,
+  UpsertManyResult,
 } from '../../domain/activity/ActivityRepository';
 import { Activity } from '../../domain/activity/Activity';
 
@@ -112,6 +113,104 @@ export class PgActivityRepository implements ActivityRepository {
 
   async deleteByAthleteId(athleteId: number): Promise<void> {
     await this.pool.query('DELETE FROM activities WHERE athlete_id = $1', [athleteId]);
+  }
+
+  async upsertMany(activities: Activity[]): Promise<UpsertManyResult> {
+    if (activities.length === 0) return { created: 0, updated: 0 };
+
+    const ids = activities.map((a) => a.id);
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows: existingRows } = await client.query(
+        `SELECT id FROM activities WHERE id = ANY($1::bigint[])`,
+        [ids]
+      );
+      const existing = new Set<number>(existingRows.map((r) => Number(r.id)));
+      for (const a of activities) {
+        await client.query(
+          `INSERT INTO activities (
+             id, athlete_id, gear_id, name, sport_type,
+             start_date, start_date_local, timezone,
+             distance, moving_time, elapsed_time, total_elevation_gain,
+             average_speed, max_speed, average_cadence,
+             has_heartrate, average_heartrate, max_heartrate,
+             average_temp, suffer_score, calories,
+             trainer, commute, device_name, description
+           ) VALUES (
+             $1, $2, $3, $4, $5,
+             $6, $7, $8,
+             $9, $10, $11, $12,
+             $13, $14, $15,
+             $16, $17, $18,
+             $19, $20, $21,
+             $22, $23, $24, $25
+           )
+           ON CONFLICT (id) DO UPDATE SET
+             athlete_id = EXCLUDED.athlete_id,
+             gear_id = EXCLUDED.gear_id,
+             name = EXCLUDED.name,
+             sport_type = EXCLUDED.sport_type,
+             start_date = EXCLUDED.start_date,
+             start_date_local = EXCLUDED.start_date_local,
+             timezone = EXCLUDED.timezone,
+             distance = EXCLUDED.distance,
+             moving_time = EXCLUDED.moving_time,
+             elapsed_time = EXCLUDED.elapsed_time,
+             total_elevation_gain = EXCLUDED.total_elevation_gain,
+             average_speed = EXCLUDED.average_speed,
+             max_speed = EXCLUDED.max_speed,
+             average_cadence = EXCLUDED.average_cadence,
+             has_heartrate = EXCLUDED.has_heartrate,
+             average_heartrate = EXCLUDED.average_heartrate,
+             max_heartrate = EXCLUDED.max_heartrate,
+             average_temp = EXCLUDED.average_temp,
+             suffer_score = EXCLUDED.suffer_score,
+             calories = EXCLUDED.calories,
+             trainer = EXCLUDED.trainer,
+             commute = EXCLUDED.commute,
+             device_name = EXCLUDED.device_name,
+             description = EXCLUDED.description,
+             updated_at = NOW()`,
+          [
+            a.id,
+            a.athleteId,
+            a.gearId ?? null,
+            a.name,
+            a.sportType,
+            a.startDate,
+            a.startDateLocal,
+            a.timezone,
+            a.distance,
+            a.movingTime,
+            a.elapsedTime,
+            a.totalElevationGain ?? null,
+            a.averageSpeed ?? null,
+            a.maxSpeed ?? null,
+            a.averageCadence ?? null,
+            a.hasHeartrate,
+            a.averageHeartrate ?? null,
+            a.maxHeartrate ?? null,
+            a.averageTemp ?? null,
+            a.sufferScore ?? null,
+            a.calories ?? null,
+            a.trainer,
+            a.commute,
+            a.deviceName ?? null,
+            a.description ?? null,
+          ]
+        );
+      }
+      await client.query('COMMIT');
+      const updated = activities.filter((a) => existing.has(Number(a.id))).length;
+      const created = activities.length - updated;
+      return { created, updated };
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   // ─── private query helpers ─────────────────────────────────────────────────

@@ -12,7 +12,7 @@ export interface LoginOutput {
   token: string;
   user: {
     id: number;
-    email: string;
+    email: string | null;
     role: 'admin' | 'user';
     firstname: string;
     lastname: string;

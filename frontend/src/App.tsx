@@ -5,6 +5,7 @@ import { LoginPage } from './ui/pages/LoginPage';
 import { RegisterPage } from './ui/pages/RegisterPage';
 import { DashboardPage } from './ui/pages/DashboardPage';
 import { AdminAthletesPage } from './ui/pages/AdminAthletesPage';
+import { StravaReturnPage } from './ui/pages/StravaReturnPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         {/* Rutas públicas — cualquiera puede entrar */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth/strava/return" element={<StravaReturnPage />} />
 
         {/* Rutas protegidas — solo usuarios autenticados */}
         <Route element={<ProtectedRoute />}>

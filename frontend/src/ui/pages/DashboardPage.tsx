@@ -6,6 +6,7 @@ import { athletesApi } from '../../infrastructure/api/athletesApi';
 import type { AthletePublic } from '../../infrastructure/api/athletesApi';
 import { AppShell } from '../templates/AppShell';
 import { DashboardGrid } from '../organisms/DashboardGrid';
+import { ConnectStravaCard } from '../organisms/ConnectStravaCard';
 import { DashboardSkeleton } from '../atoms/LoadingSkeleton';
 import { PageHeader } from '../atoms/PageHeader';
 
@@ -16,6 +17,7 @@ export function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [refreshTick, setRefreshTick] = useState(0);
 
   // Admin athlete selector
   const [athletes, setAthletes] = useState<AthletePublic[]>([]);
@@ -49,7 +51,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedAthleteId]);
+  }, [selectedAthleteId, refreshTick]);
 
   const title = isAdmin
     ? selectedAthleteId
@@ -88,6 +90,7 @@ export function DashboardPage() {
             {error}
           </div>
         )}
+        {!isAdmin && <ConnectStravaCard onSyncComplete={() => setRefreshTick((t) => t + 1)} />}
         {!loading && !error && data && <DashboardGrid data={data} />}
       </div>
     </AppShell>
