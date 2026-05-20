@@ -48,7 +48,8 @@ export function ConnectStravaCard({ onSyncComplete }: Props) {
       };
       if (b.firstSyncFailed) {
         return {
-          error: 'Tu cuenta se conectó, pero la primera sincronización falló. Pulsa "Sincronizar" para reintentar.',
+          error:
+            'Tu cuenta se conectó, pero la primera sincronización falló. Pulsa "Sincronizar" para reintentar.',
           message: '',
         };
       }
