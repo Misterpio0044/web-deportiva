@@ -2,7 +2,6 @@ import type { DashboardData } from '../../infrastructure/api/dashboardApi';
 import { WeeklyVolumeChart } from '../molecules/WeeklyVolumeChart';
 import { MonthlyDistanceChart } from '../molecules/MonthlyDistanceChart';
 import { HeartRateZonesChart } from '../molecules/HeartRateZonesChart';
-import { RecentActivitiesTable } from '../molecules/RecentActivitiesTable';
 import { StatCard } from '../atoms/StatCard';
 import { formatTotalDistance, formatPace } from '../../lib/formatters';
 import { Activity, Route, Heart } from 'lucide-react';
@@ -42,9 +41,6 @@ export function DashboardGrid({ data }: Props) {
         <MonthlyDistanceChart data={data.monthlyDistance} />
         <HeartRateZonesChart data={data.heartRateZones} />
       </div>
-
-      {/* Recent activities */}
-      <RecentActivitiesTable activities={data.recentActivities} />
     </div>
   );
 }

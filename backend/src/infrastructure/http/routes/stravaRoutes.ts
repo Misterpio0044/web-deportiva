@@ -57,10 +57,11 @@ stravaAuthRouter.get('/authorize', (req: Request, res: Response, next: NextFunct
 
 stravaAuthRouter.get('/callback', async (req: Request, res: Response) => {
   const cfg = getStravaConfig();
+
   try {
     if (typeof req.query.error === 'string') {
       const reason = encodeURIComponent(req.query.error);
-      res.redirect(302, `${cfg.FRONTEND_URL}/login?stravaError=${reason}`);
+      res.redirect(302, `${cfg.FRONTEND_URL}/auth/strava/return#error=${reason}`);
       return;
     }
     const parsed = callbackSchema.parse(req.query);
@@ -80,7 +81,7 @@ stravaAuthRouter.get('/callback', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[Strava callback]', err);
     const reason = err instanceof Error ? encodeURIComponent(err.message) : 'unknown_error';
-    res.redirect(302, `${cfg.FRONTEND_URL}/login?stravaError=${reason}`);
+    res.redirect(302, `${cfg.FRONTEND_URL}/auth/strava/return#error=${reason}`);
   }
 });
 

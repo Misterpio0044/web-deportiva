@@ -7,8 +7,11 @@ export interface AthletePublic {
   username: string;
   email: string;
   role: 'admin' | 'user';
-  maxHeartrate?: number;
-  weight?: number;
+  profileMediumUrl?: string;
+  stravaId?: number;
+  lastStravaSyncAt?: string;
+  lastStravaSyncStatus?: 'success' | 'error';
+  activityCount?: number;
   createdAt: string;
 }
 
@@ -17,4 +20,7 @@ export const athletesApi = {
     apiClient.get<{ athletes: AthletePublic[] }>('/athletes').then((r) => r.data.athletes),
 
   delete: (id: number) => apiClient.delete(`/athletes/${id}`),
+
+  changeRole: (id: number, role: 'admin' | 'user') =>
+    apiClient.patch<{ ok: true }>(`/athletes/${id}/role`, { role }),
 };

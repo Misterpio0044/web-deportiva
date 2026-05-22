@@ -29,7 +29,7 @@ export class BuildStravaAuthorizeUrlUseCase {
       client_id: cfg.STRAVA_CLIENT_ID,
       redirect_uri: cfg.STRAVA_REDIRECT_URI,
       response_type: 'code',
-      approval_prompt: 'auto',
+      approval_prompt: 'force',
       scope: STRAVA_DEFAULT_SCOPES,
       state,
     });

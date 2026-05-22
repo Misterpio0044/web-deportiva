@@ -27,4 +27,4 @@ export interface Athlete {
   updatedAt: Date;
 }
 
-export type AthletePublic = Omit<Athlete, 'passwordHash'>;
+export type AthletePublic = Omit<Athlete, 'passwordHash'> & { activityCount?: number };

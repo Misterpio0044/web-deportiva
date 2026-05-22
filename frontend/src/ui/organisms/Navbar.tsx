@@ -1,6 +1,15 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../application/auth/useAuthStore';
-import { LogOut, LayoutDashboard, Users, User, Settings, ChevronDown } from 'lucide-react';
+import {
+  LogOut,
+  LayoutDashboard,
+  Users,
+  User,
+  Settings,
+  ChevronDown,
+  Activity as ActivityIcon,
+  Plus,
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -36,6 +45,20 @@ export function Navbar() {
           >
             <LayoutDashboard size={16} />
             Dashboard
+          </Link>
+          <Link
+            to="/activities"
+            className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <ActivityIcon size={16} />
+            Actividades
+          </Link>
+          <Link
+            to="/activities/add"
+            className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <Plus size={16} />
+            Añadir
           </Link>
           {user?.role === 'admin' && (
             <Link

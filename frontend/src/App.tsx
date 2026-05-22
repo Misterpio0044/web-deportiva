@@ -4,6 +4,9 @@ import { AdminRoute } from './components/AdminRoute';
 import { LoginPage } from './ui/pages/LoginPage';
 import { RegisterPage } from './ui/pages/RegisterPage';
 import { DashboardPage } from './ui/pages/DashboardPage';
+import { ActivitiesPage } from './ui/pages/ActivitiesPage';
+import { ActivityDetailPage } from './ui/pages/ActivityDetailPage';
+import { AddActivityPage } from './ui/pages/AddActivityPage';
 import { SettingsPage } from './ui/pages/SettingsPage';
 import { AdminAthletesPage } from './ui/pages/AdminAthletesPage';
 import { StravaReturnPage } from './ui/pages/StravaReturnPage';
@@ -20,6 +23,9 @@ function App() {
         {/* Rutas protegidas — solo usuarios autenticados */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/activities" element={<ActivitiesPage />} />
+          <Route path="/activities/add" element={<AddActivityPage />} />
+          <Route path="/activities/:id" element={<ActivityDetailPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
 

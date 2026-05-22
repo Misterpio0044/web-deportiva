@@ -34,19 +34,9 @@ function formatMonth(yyyyMm: string): string {
 }
 
 function buildFullYear(data: MonthlyDistance[]): { label: string; km: number }[] {
-  // Anchor to the last month in the data, or current month if no data
-  const anchor =
-    data.length > 0
-      ? new Date(data[data.length - 1].month + '-01')
-      : new Date();
-
-  const map = new Map(data.map((d) => [d.month, d.totalDistanceKm]));
-
-  return Array.from({ length: 12 }, (_, i) => {
-    const d = new Date(anchor.getFullYear(), anchor.getMonth() - 11 + i, 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    return { label: formatMonth(key), km: map.get(key) ?? 0 };
-  });
+  // El backend devuelve siempre los 12 meses más recientes (ventana móvil),
+  // rellenando con 0 los meses sin actividad.
+  return data.map((d) => ({ label: formatMonth(d.month), km: d.totalDistanceKm }));
 }
 
 export function MonthlyDistanceChart({ data }: Props) {
