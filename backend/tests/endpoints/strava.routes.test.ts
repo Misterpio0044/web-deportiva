@@ -78,8 +78,7 @@ describe('GET /api/auth/strava/authorize', () => {
 
   it('?link=1 con token → 302 e incluye linkAthleteId en el state', async () => {
     const token = signTestToken({ sub: 42 });
-    const res = await request(app)
-      .get(`/api/auth/strava/authorize?link=1&token=${token}`);
+    const res = await request(app).get(`/api/auth/strava/authorize?link=1&token=${token}`);
     expect(res.status).toBe(302);
     const url = new URL(res.headers.location);
     const state = url.searchParams.get('state')!;
@@ -90,17 +89,13 @@ describe('GET /api/auth/strava/authorize', () => {
 
 describe('GET /api/auth/strava/callback', () => {
   it('state inválido → redirige a frontend con #error=', async () => {
-    const res = await request(app).get(
-      '/api/auth/strava/callback?code=abc&state=invalid'
-    );
+    const res = await request(app).get('/api/auth/strava/callback?code=abc&state=invalid');
     expect(res.status).toBe(302);
     expect(res.headers.location).toContain('/auth/strava/return#error=');
   });
 
   it('query.error → redirige a frontend con #error=', async () => {
-    const res = await request(app).get(
-      '/api/auth/strava/callback?error=access_denied'
-    );
+    const res = await request(app).get('/api/auth/strava/callback?error=access_denied');
     expect(res.status).toBe(302);
     expect(res.headers.location).toContain('#error=access_denied');
   });

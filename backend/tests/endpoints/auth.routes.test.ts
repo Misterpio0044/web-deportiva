@@ -27,10 +27,18 @@ const repos = vi.hoisted(() => ({
 
 vi.mock('../../src/infrastructure/database/pool', () => ({ pool: {} }));
 vi.mock('../../src/infrastructure/persistence/PgAthleteRepository', () => ({
-  PgAthleteRepository: class { constructor() { return repos.athlete; } },
+  PgAthleteRepository: class {
+    constructor() {
+      return repos.athlete;
+    }
+  },
 }));
 vi.mock('../../src/infrastructure/persistence/PgActivityRepository', () => ({
-  PgActivityRepository: class { constructor() { return {}; } },
+  PgActivityRepository: class {
+    constructor() {
+      return {};
+    }
+  },
 }));
 
 import app from '../../src/infrastructure/app';

@@ -1,10 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import jwt from 'jsonwebtoken';
 import { HandleStravaCallbackUseCase } from '../../../src/application/strava/HandleStravaCallbackUseCase';
-import {
-  ConflictError,
-  UnauthorizedError,
-} from '../../../src/domain/shared/DomainError';
+import { ConflictError, UnauthorizedError } from '../../../src/domain/shared/DomainError';
 import { createFakeAthleteRepo } from '../../_helpers/fakeAthleteRepo';
 import { makeAthlete } from '../../_helpers/fixtures';
 

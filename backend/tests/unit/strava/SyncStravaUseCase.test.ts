@@ -60,10 +60,21 @@ describe('SyncStravaUseCase', () => {
     const client = fakeClient({
       listActivities: vi.fn().mockResolvedValue([
         {
-          id: 1, name: 'A', type: 'Run', sport_type: 'Run',
-          start_date: '2024-01-01T00:00:00Z', start_date_local: '2024-01-01T00:00:00Z',
-          timezone: 'UTC', utc_offset: 0, distance: 5000, moving_time: 1500, elapsed_time: 1500,
-          total_elevation_gain: 50, has_heartrate: false, trainer: false, commute: false,
+          id: 1,
+          name: 'A',
+          type: 'Run',
+          sport_type: 'Run',
+          start_date: '2024-01-01T00:00:00Z',
+          start_date_local: '2024-01-01T00:00:00Z',
+          timezone: 'UTC',
+          utc_offset: 0,
+          distance: 5000,
+          moving_time: 1500,
+          elapsed_time: 1500,
+          total_elevation_gain: 50,
+          has_heartrate: false,
+          trainer: false,
+          commute: false,
         },
       ]),
     });
@@ -82,9 +93,9 @@ describe('SyncStravaUseCase', () => {
     const actRepo = createFakeActivityRepo();
     (aRepo.findById as any).mockResolvedValue(makeLinkedAthlete());
     const client = fakeClient({
-      getAthlete: vi.fn().mockRejectedValue(
-        new StravaApiError('Token expirado', 'STRAVA_UNAUTHORIZED', 401)
-      ),
+      getAthlete: vi
+        .fn()
+        .mockRejectedValue(new StravaApiError('Token expirado', 'STRAVA_UNAUTHORIZED', 401)),
     });
 
     await expect(
