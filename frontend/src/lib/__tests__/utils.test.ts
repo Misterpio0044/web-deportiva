@@ -7,7 +7,8 @@ describe('cn', () => {
   });
 
   it('elimina clases falsy', () => {
-    expect(cn('a', false && 'b', null, undefined, 'c')).toBe('a c');
+    const active = false;
+    expect(cn('a', active && 'b', null, undefined, 'c')).toBe('a c');
   });
 
   it('mergea clases de Tailwind en conflicto (la última gana)', () => {
