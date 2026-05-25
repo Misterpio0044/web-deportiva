@@ -17,7 +17,7 @@ export function ActivitiesPage() {
   const [error, setError] = useState('');
   const [athletes, setAthletes] = useState<AthletePublic[]>([]);
   const [selectedAthleteId, setSelectedAthleteId] = useState<number | 'global' | undefined>(
-    isAdmin ? (user?.id ?? undefined) : undefined,
+    isAdmin ? (user?.id ?? undefined) : undefined
   );
 
   useEffect(() => {

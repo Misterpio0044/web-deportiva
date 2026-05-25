@@ -38,7 +38,7 @@ export function DashboardPage() {
   // Admin athlete selector — arranca en el propio ID del admin (vista personal)
   const [athletes, setAthletes] = useState<AthletePublic[]>([]);
   const [selectedAthleteId, setSelectedAthleteId] = useState<number | 'global' | undefined>(
-    isAdmin ? (user?.id ?? undefined) : undefined,
+    isAdmin ? (user?.id ?? undefined) : undefined
   );
 
   useEffect(() => {
@@ -71,7 +71,8 @@ export function DashboardPage() {
     };
   }, [selectedAthleteId, refreshTick]);
 
-  const isAdminOwnView = isAdmin && selectedAthleteId !== 'global' && selectedAthleteId === user?.id;
+  const isAdminOwnView =
+    isAdmin && selectedAthleteId !== 'global' && selectedAthleteId === user?.id;
   const showConnectStrava = !isAdmin || isAdminOwnView;
 
   const title =

@@ -48,7 +48,7 @@ export function AdminAthletesPage() {
     }
     if (
       !confirm(
-        `¿Eliminar a ${athlete.firstname} ${athlete.lastname}? Esta acción no se puede deshacer.`,
+        `¿Eliminar a ${athlete.firstname} ${athlete.lastname}? Esta acción no se puede deshacer.`
       )
     )
       return;

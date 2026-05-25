@@ -288,9 +288,9 @@ export class PgAthleteRepository implements AthleteRepository {
   }
 
   async updateRole(athleteId: number, role: 'admin' | 'user'): Promise<void> {
-    await this.pool.query(
-      'UPDATE athletes SET role = $1, updated_at = NOW() WHERE id = $2',
-      [role, athleteId],
-    );
+    await this.pool.query('UPDATE athletes SET role = $1, updated_at = NOW() WHERE id = $2', [
+      role,
+      athleteId,
+    ]);
   }
 }

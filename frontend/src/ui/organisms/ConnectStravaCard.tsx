@@ -170,7 +170,7 @@ export function ConnectStravaCard({ onSyncComplete, initialError }: Props) {
               const popup = window.open(
                 url,
                 'strava_oauth',
-                `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`,
+                `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`
               );
               if (!popup) {
                 // Fallback si el navegador bloquea el popup
@@ -189,16 +189,19 @@ export function ConnectStravaCard({ onSyncComplete, initialError }: Props) {
                     isNewAccount: boolean;
                   };
                   login(p.token, p.user);
-                  stravaApi.status().then(setStatus).catch(() => {});
+                  stravaApi
+                    .status()
+                    .then(setStatus)
+                    .catch(() => {});
                   if (p.firstSyncFailed) {
                     setError(
-                      'Tu cuenta se conectó, pero la primera sincronización falló. Pulsa "Sincronizar" para reintentar.',
+                      'Tu cuenta se conectó, pero la primera sincronización falló. Pulsa "Sincronizar" para reintentar.'
                     );
                   } else {
                     setMessage(
                       `${
                         p.isNewAccount ? 'Cuenta creada vía Strava. ' : ''
-                      }Sincronizadas ${p.activitiesSynced} actividades.`,
+                      }Sincronizadas ${p.activitiesSynced} actividades.`
                     );
                   }
                   onSyncComplete?.();

@@ -14,7 +14,7 @@ interface ManualForm {
   date: string;
   time: string;
   durationMin: string; // movingTime
-  elapsedMin: string;  // elapsedTime (opcional)
+  elapsedMin: string; // elapsedTime (opcional)
   distanceKm: string;
   totalElevationGain: string;
   // FC y esfuerzo
@@ -102,7 +102,8 @@ export function AddActivityPage() {
         elapsedMin: String(Math.round(parsed.elapsedTime / 60)),
         distanceKm: (parsed.distance / 1000).toFixed(2),
         totalElevationGain: parsed.totalElevationGain > 0 ? String(parsed.totalElevationGain) : '',
-        averageHeartrate: parsed.averageHeartrate !== undefined ? String(parsed.averageHeartrate) : '',
+        averageHeartrate:
+          parsed.averageHeartrate !== undefined ? String(parsed.averageHeartrate) : '',
         maxHeartrate: parsed.maxHeartrate !== undefined ? String(parsed.maxHeartrate) : '',
         sufferScore: '',
         averageCadence: parsed.averageCadence !== undefined ? String(parsed.averageCadence) : '',
@@ -131,11 +132,20 @@ export function AddActivityPage() {
     e.preventDefault();
     setError('');
 
-    if (!form.name.trim()) { setError('El nombre es obligatorio'); return; }
-    if (!form.date || !form.time) { setError('La fecha y hora son obligatorias'); return; }
+    if (!form.name.trim()) {
+      setError('El nombre es obligatorio');
+      return;
+    }
+    if (!form.date || !form.time) {
+      setError('La fecha y hora son obligatorias');
+      return;
+    }
 
     const movingSec = Math.round((num(form.durationMin) ?? 0) * 60);
-    if (movingSec <= 0) { setError('La duración es obligatoria'); return; }
+    if (movingSec <= 0) {
+      setError('La duración es obligatoria');
+      return;
+    }
 
     const elapsedSec = form.elapsedMin
       ? Math.max(movingSec, Math.round((num(form.elapsedMin) ?? 0) * 60))
@@ -270,70 +280,170 @@ export function AddActivityPage() {
             {/* ── Datos básicos ───────────────────────────────────── */}
             <Section title="Datos básicos">
               <Field label="Nombre *" full>
-                <input type="text" value={form.name} onChange={(e) => set('name', e.target.value)} className="form-input" required />
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => set('name', e.target.value)}
+                  className="form-input"
+                  required
+                />
               </Field>
               <Field label="Fecha *">
-                <input type="date" value={form.date} onChange={(e) => set('date', e.target.value)} className="form-input" required />
+                <input
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => set('date', e.target.value)}
+                  className="form-input"
+                  required
+                />
               </Field>
               <Field label="Hora de inicio *">
-                <input type="time" value={form.time} onChange={(e) => set('time', e.target.value)} className="form-input" required />
+                <input
+                  type="time"
+                  value={form.time}
+                  onChange={(e) => set('time', e.target.value)}
+                  className="form-input"
+                  required
+                />
               </Field>
               <Field label="Duración en movimiento (min) *">
-                <input type="text" inputMode="decimal" value={form.durationMin} onChange={(e) => set('durationMin', e.target.value)} className="form-input" required />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={form.durationMin}
+                  onChange={(e) => set('durationMin', e.target.value)}
+                  className="form-input"
+                  required
+                />
               </Field>
               <Field label="Tiempo total con pausas (min)">
-                <input type="text" inputMode="decimal" value={form.elapsedMin} onChange={(e) => set('elapsedMin', e.target.value)} className="form-input" />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={form.elapsedMin}
+                  onChange={(e) => set('elapsedMin', e.target.value)}
+                  className="form-input"
+                />
               </Field>
               <Field label="Distancia (km)">
-                <input type="text" inputMode="decimal" value={form.distanceKm} onChange={(e) => set('distanceKm', e.target.value)} className="form-input" />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={form.distanceKm}
+                  onChange={(e) => set('distanceKm', e.target.value)}
+                  className="form-input"
+                />
               </Field>
               <Field label="Desnivel positivo (m)">
-                <input type="text" inputMode="decimal" value={form.totalElevationGain} onChange={(e) => set('totalElevationGain', e.target.value)} className="form-input" />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={form.totalElevationGain}
+                  onChange={(e) => set('totalElevationGain', e.target.value)}
+                  className="form-input"
+                />
               </Field>
             </Section>
 
             {/* ── FC y esfuerzo ───────────────────────────────────── */}
             <Section title="Frecuencia cardíaca y esfuerzo">
               <Field label="FC media (bpm)">
-                <input type="text" inputMode="numeric" value={form.averageHeartrate} onChange={(e) => set('averageHeartrate', e.target.value)} className="form-input" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={form.averageHeartrate}
+                  onChange={(e) => set('averageHeartrate', e.target.value)}
+                  className="form-input"
+                />
               </Field>
               <Field label="FC máxima (bpm)">
-                <input type="text" inputMode="numeric" value={form.maxHeartrate} onChange={(e) => set('maxHeartrate', e.target.value)} className="form-input" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={form.maxHeartrate}
+                  onChange={(e) => set('maxHeartrate', e.target.value)}
+                  className="form-input"
+                />
               </Field>
               <Field label="Esfuerzo percibido (RPE 0–100)">
-                <input type="text" inputMode="numeric" value={form.sufferScore} onChange={(e) => set('sufferScore', e.target.value)} className="form-input" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={form.sufferScore}
+                  onChange={(e) => set('sufferScore', e.target.value)}
+                  className="form-input"
+                />
               </Field>
             </Section>
 
             {/* ── Métricas avanzadas ──────────────────────────────── */}
             <Section title="Métricas avanzadas">
               <Field label="Cadencia media (spm)">
-                <input type="text" inputMode="numeric" value={form.averageCadence} onChange={(e) => set('averageCadence', e.target.value)} className="form-input" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={form.averageCadence}
+                  onChange={(e) => set('averageCadence', e.target.value)}
+                  className="form-input"
+                />
               </Field>
               <Field label="Velocidad máxima (km/h)">
-                <input type="text" inputMode="decimal" value={form.maxSpeedKmh} onChange={(e) => set('maxSpeedKmh', e.target.value)} className="form-input" />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={form.maxSpeedKmh}
+                  onChange={(e) => set('maxSpeedKmh', e.target.value)}
+                  className="form-input"
+                />
               </Field>
               <Field label="Temperatura media (°C)">
-                <input type="text" inputMode="decimal" value={form.averageTemp} onChange={(e) => set('averageTemp', e.target.value)} className="form-input" />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={form.averageTemp}
+                  onChange={(e) => set('averageTemp', e.target.value)}
+                  className="form-input"
+                />
               </Field>
               <Field label="Calorías (kcal)">
-                <input type="text" inputMode="numeric" value={form.calories} onChange={(e) => set('calories', e.target.value)} className="form-input" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={form.calories}
+                  onChange={(e) => set('calories', e.target.value)}
+                  className="form-input"
+                />
               </Field>
             </Section>
 
             {/* ── Contexto ────────────────────────────────────────── */}
             <Section title="Contexto">
               <Field label="Dispositivo">
-                <input type="text" value={form.deviceName} onChange={(e) => set('deviceName', e.target.value)} className="form-input" />
+                <input
+                  type="text"
+                  value={form.deviceName}
+                  onChange={(e) => set('deviceName', e.target.value)}
+                  className="form-input"
+                />
               </Field>
               <Field label="Cinta de correr">
                 <label className="mt-2 flex items-center gap-2 text-sm text-slate-700">
-                  <input type="checkbox" checked={form.trainer} onChange={(e) => set('trainer', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-green-600 focus:ring-green-500" />
+                  <input
+                    type="checkbox"
+                    checked={form.trainer}
+                    onChange={(e) => set('trainer', e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-green-600 focus:ring-green-500"
+                  />
                   Sí, fue en cinta
                 </label>
               </Field>
               <Field label="Notas" full>
-                <textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={3} className="form-input" />
+                <textarea
+                  value={form.description}
+                  onChange={(e) => set('description', e.target.value)}
+                  rows={3}
+                  className="form-input"
+                />
               </Field>
             </Section>
 
@@ -344,12 +454,18 @@ export function AddActivityPage() {
             )}
 
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => navigate('/activities')}
-                className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              <button
+                type="button"
+                onClick={() => navigate('/activities')}
+                className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
                 Cancelar
               </button>
-              <button type="submit" disabled={submitting}
-                className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+              >
                 {submitting ? 'Guardando…' : 'Guardar actividad'}
               </button>
             </div>
@@ -386,7 +502,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Field({ label, full, children }: { label: string; full?: boolean; children: React.ReactNode }) {
+function Field({
+  label,
+  full,
+  children,
+}: {
+  label: string;
+  full?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div className={full ? 'md:col-span-3' : undefined}>
       <label className="mb-1 block text-xs font-medium text-slate-600">{label}</label>

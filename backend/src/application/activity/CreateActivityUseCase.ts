@@ -33,9 +33,7 @@ export class CreateActivityUseCase {
     // es el "wall clock" de su zona y debe almacenarse tal cual en start_date_local.
     // Forzamos UTC para que el resultado no dependa de la TZ del servidor.
     const hasTimezoneSuffix = /Z$|[+-]\d{2}:?\d{2}$/.test(input.startDateLocal);
-    const isoForLocal = hasTimezoneSuffix
-      ? input.startDateLocal
-      : input.startDateLocal + 'Z';
+    const isoForLocal = hasTimezoneSuffix ? input.startDateLocal : input.startDateLocal + 'Z';
     const startLocal = new Date(isoForLocal);
     if (isNaN(startLocal.getTime())) {
       throw new Error('Fecha de inicio inválida');

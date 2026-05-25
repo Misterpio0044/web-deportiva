@@ -56,11 +56,7 @@ export function MonthlyDistanceChart({ data }: Props) {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis
-            dataKey="label"
-            interval={0}
-            tick={{ fontSize: 11, fill: '#94a3b8' }}
-          />
+          <XAxis dataKey="label" interval={0} tick={{ fontSize: 11, fill: '#94a3b8' }} />
           <YAxis
             tick={{ fontSize: 11, fill: '#94a3b8' }}
             tickFormatter={(v: number) => `${v} km`}

@@ -104,35 +104,29 @@ export function ActivityDetailPage() {
               <MetricRow
                 label="Desnivel positivo"
                 value={
-                  activity.totalElevationGain
-                    ? `${Math.round(activity.totalElevationGain)} m`
-                    : '—'
+                  activity.totalElevationGain ? `${Math.round(activity.totalElevationGain)} m` : '—'
                 }
               />
             </Section>
 
             <Section title="Velocidad y cadencia">
               <MetricRow label="Velocidad media" value={speedKmh ? `${speedKmh} km/h` : '—'} />
-              <MetricRow label="Velocidad máxima" value={maxSpeedKmh ? `${maxSpeedKmh} km/h` : '—'} />
+              <MetricRow
+                label="Velocidad máxima"
+                value={maxSpeedKmh ? `${maxSpeedKmh} km/h` : '—'}
+              />
               <MetricRow
                 label="Cadencia media"
-                value={
-                  activity.averageCadence ? `${Math.round(activity.averageCadence)} ppm` : '—'
-                }
+                value={activity.averageCadence ? `${Math.round(activity.averageCadence)} ppm` : '—'}
               />
             </Section>
 
             <Section title="Frecuencia cardíaca">
-              <MetricRow
-                label="Datos disponibles"
-                value={activity.hasHeartrate ? 'Sí' : 'No'}
-              />
+              <MetricRow label="Datos disponibles" value={activity.hasHeartrate ? 'Sí' : 'No'} />
               <MetricRow
                 label="FC media"
                 value={
-                  activity.averageHeartrate
-                    ? `${Math.round(activity.averageHeartrate)} bpm`
-                    : '—'
+                  activity.averageHeartrate ? `${Math.round(activity.averageHeartrate)} bpm` : '—'
                 }
               />
               <MetricRow

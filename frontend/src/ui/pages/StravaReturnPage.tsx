@@ -57,7 +57,10 @@ export function StravaReturnPage() {
     const raw = params.get('payload');
     if (!raw) {
       if (isPopup) {
-        window.opener?.postMessage({ type: 'strava_oauth_error', error: 'missing_payload' }, ORIGIN);
+        window.opener?.postMessage(
+          { type: 'strava_oauth_error', error: 'missing_payload' },
+          ORIGIN
+        );
         window.close();
       } else {
         navigate('/login?stravaError=missing_payload', { replace: true });
@@ -86,7 +89,10 @@ export function StravaReturnPage() {
     } catch (err) {
       console.error('[StravaReturn] payload inválido', err);
       if (isPopup) {
-        window.opener?.postMessage({ type: 'strava_oauth_error', error: 'invalid_payload' }, ORIGIN);
+        window.opener?.postMessage(
+          { type: 'strava_oauth_error', error: 'invalid_payload' },
+          ORIGIN
+        );
         window.close();
       } else {
         navigate('/login?stravaError=invalid_payload', { replace: true });
