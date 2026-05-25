@@ -22,4 +22,11 @@ export default defineConfig([
       '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
     },
   },
+  // Test files: relax strict typing rules
+  {
+    files: ['backend/tests/**/*.ts', 'backend/tests/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 ]);

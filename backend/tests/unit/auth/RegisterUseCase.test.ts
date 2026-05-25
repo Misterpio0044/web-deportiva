@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import bcrypt from 'bcrypt';
 import { RegisterUseCase } from '../../../src/application/auth/RegisterUseCase';
 import { ConflictError } from '../../../src/domain/shared/DomainError';
