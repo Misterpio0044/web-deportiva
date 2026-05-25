@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/infrastructure/server.ts",
-    "seed": "tsx src/infrastructure/database/seed.ts"
+    "seed": "tsx src/infrastructure/database/seed.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage"
   },
   "keywords": [],
   "author": "",
@@ -27,7 +30,11 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.6.0",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.7",
+    "supertest": "^7.2.2",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.7"
   }
 }

@@ -4,7 +4,10 @@
   "description": "Web orientada a la importanción de datos de la plataforma Strava y su análisis.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm test --prefix backend && npm test --prefix frontend",
+    "test:backend": "npm test --prefix backend",
+    "test:frontend": "npm test --prefix frontend",
+    "test:cov": "npm run test:cov --prefix backend && npm run test:cov --prefix frontend",
     "prepare": "husky",
     "lint": "npm run lint:backend && npm run lint:frontend",
     "lint:backend": "eslint .",

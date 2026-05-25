@@ -8,6 +8,7 @@ on:
 
 jobs:
   quality-check:
+    name: Lint & Format
     runs-on: ubuntu-latest
 
     steps:
@@ -31,3 +32,49 @@ jobs:
 
       - name: Comprobar Estética (Prettier)
         run: npx prettier --check .
+
+  test-backend:
+    name: Tests Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias del backend
+        run: npm install
+        working-directory: backend
+
+      - name: Ejecutar tests del backend
+        run: npm test
+        working-directory: backend
+
+  test-frontend:
+    name: Tests Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias del frontend
+        run: npm install --legacy-peer-deps
+        working-directory: frontend
+
+      - name: Ejecutar tests del frontend
+        run: npm test
+        working-directory: frontend
