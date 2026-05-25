@@ -84,7 +84,10 @@ export class HandleStravaCallbackUseCase {
 
       const conflicting = await this.athleteRepo.findByStravaId(stravaAthlete.id);
       if (conflicting && conflicting.id !== local.id) {
-        throw new ConflictError('Esta cuenta de Strava ya está vinculada a otro usuario');
+        throw new ConflictError(
+          'La cuenta de Strava que autorizaste ya está vinculada a otro usuario de la aplicación. ' +
+            'Cierra sesión en strava.com dentro del popup y autoriza con una cuenta de Strava diferente.'
+        );
       }
 
       wasFirstLink = !local.stravaId;

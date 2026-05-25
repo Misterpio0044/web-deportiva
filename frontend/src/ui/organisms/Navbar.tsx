@@ -1,12 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../application/auth/useAuthStore';
-import { LogOut, LayoutDashboard, Users, User, Settings, ChevronDown } from 'lucide-react';
+import {
+  LogOut,
+  LayoutDashboard,
+  Users,
+  User,
+  Settings,
+  ChevronDown,
+  Activity as ActivityIcon,
+  Plus,
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
@@ -38,6 +46,20 @@ export function Navbar() {
             <LayoutDashboard size={16} />
             Dashboard
           </Link>
+          <Link
+            to="/activities"
+            className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <ActivityIcon size={16} />
+            Actividades
+          </Link>
+          <Link
+            to="/activities/add"
+            className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <Plus size={16} />
+            Añadir
+          </Link>
           {user?.role === 'admin' && (
             <Link
               to="/admin/athletes"
@@ -60,7 +82,9 @@ export function Navbar() {
                 <User size={14} />
               </div>
               <div className="hidden text-left sm:block">
-                <p className="text-sm font-medium text-slate-800">{user?.firstname}</p>
+                <p className="text-sm font-medium text-slate-800">
+                  {user?.firstname} {user?.lastname}
+                </p>
                 <p className="text-xs text-slate-400">
                   {user?.role === 'admin' ? (
                     <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
@@ -75,10 +99,6 @@ export function Navbar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-44">
-            <DropdownMenuLabel>
-              {user?.firstname} {user?.lastname}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => navigate('/settings')}>
               <Settings size={14} />
               Ajustes

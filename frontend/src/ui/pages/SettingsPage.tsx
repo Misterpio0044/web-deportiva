@@ -64,8 +64,9 @@ export function SettingsPage() {
 
     // Solo envía los campos cambiados respecto al user actual
     const payload: Record<string, string> = {};
-    if (firstname.trim() !== user?.firstname) payload.firstname = firstname.trim();
-    if (lastname.trim() && username.trim() !== originalUsername) payload.username = username.trim();
+    if (firstname.trim() !== (user?.firstname ?? '')) payload.firstname = firstname.trim();
+    if (lastname.trim() !== (user?.lastname ?? '')) payload.lastname = lastname.trim();
+    if (username.trim() !== originalUsername) payload.username = username.trim();
     if (email.trim().toLowerCase() !== (user?.email ?? '')) payload.email = email.trim();
 
     if (Object.keys(payload).length === 0) {
@@ -78,8 +79,7 @@ export function SettingsPage() {
       const result = await meApi.updateProfile(payload);
       login(result.token, result.user);
       setUsername(result.username);
-      setOriginalin(result.token, result.user);
-      setUsername(result.username);
+      setOriginalUsername(result.username);
       setProfileMsg('Perfil actualizado correctamente');
     } catch (err) {
       if (axios.isAxiosError(err)) {

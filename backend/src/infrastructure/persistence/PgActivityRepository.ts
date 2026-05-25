@@ -216,20 +216,36 @@ export class PgActivityRepository implements ActivityRepository {
   // ─── private query helpers ─────────────────────────────────────────────────
 
   private async getWeeklyVolume(athleteId: number | null): Promise<WeeklyVolume[]> {
-    const athleteFilter = athleteId ? 'AND athlete_id = $2' : '';
-    const params: unknown[] = [16];
-    if (athleteId) params.push(athleteId);
+    const athleteFilter = athleteId ? 'AND athlete_id = $1' : '';
+    const params: unknown[] = athleteId ? [athleteId] : [];
 
+    // Últimas 16 semanas terminando en la semana actual; rellena huecos con 0.
     const { rows } = await this.pool.query(
-      `SELECT
-         to_char(date_trunc('week', start_date_local), 'YYYY-MM-DD') AS week,
-         SUM(distance) AS total_distance,
-         COUNT(*) AS activity_count
-       FROM activities
-       WHERE start_date_local >= NOW() - ($1 || ' weeks')::INTERVAL
-         ${athleteFilter}
-       GROUP BY date_trunc('week', start_date_local)
-       ORDER BY date_trunc('week', start_date_local)`,
+      `WITH weeks AS (
+         SELECT generate_series(
+           date_trunc('week', NOW()) - INTERVAL '15 weeks',
+           date_trunc('week', NOW()),
+           INTERVAL '1 week'
+         ) AS week_start
+       ),
+       agg AS (
+         SELECT
+           date_trunc('week', start_date_local) AS week_start,
+           SUM(distance) AS total_distance,
+           COUNT(*) AS activity_count
+         FROM activities
+         WHERE start_date_local >= date_trunc('week', NOW()) - INTERVAL '15 weeks'
+           AND start_date_local < date_trunc('week', NOW()) + INTERVAL '1 week'
+           ${athleteFilter}
+         GROUP BY date_trunc('week', start_date_local)
+       )
+       SELECT
+         to_char(w.week_start, 'YYYY-MM-DD') AS week,
+         COALESCE(a.total_distance, 0) AS total_distance,
+         COALESCE(a.activity_count, 0) AS activity_count
+       FROM weeks w
+       LEFT JOIN agg a ON a.week_start = w.week_start
+       ORDER BY w.week_start`,
       params
     );
 
@@ -244,14 +260,31 @@ export class PgActivityRepository implements ActivityRepository {
     const athleteFilter = athleteId ? 'AND athlete_id = $1' : '';
     const params: unknown[] = athleteId ? [athleteId] : [];
 
+    // Últimos 12 meses terminando en el mes actual; rellena huecos con 0.
     const { rows } = await this.pool.query(
-      `SELECT
-         to_char(date_trunc('month', start_date_local), 'YYYY-MM') AS month,
-         ROUND(SUM(distance) / 1000.0, 2) AS total_distance_km
-       FROM activities
-       WHERE start_date_local >= NOW() - INTERVAL '12 months' ${athleteFilter}
-       GROUP BY date_trunc('month', start_date_local)
-       ORDER BY date_trunc('month', start_date_local)`,
+      `WITH months AS (
+         SELECT generate_series(
+           date_trunc('month', NOW()) - INTERVAL '11 months',
+           date_trunc('month', NOW()),
+           INTERVAL '1 month'
+         ) AS month_start
+       ),
+       agg AS (
+         SELECT
+           date_trunc('month', start_date_local) AS month_start,
+           ROUND(SUM(distance) / 1000.0, 2) AS total_distance_km
+         FROM activities
+         WHERE start_date_local >= date_trunc('month', NOW()) - INTERVAL '11 months'
+           AND start_date_local < date_trunc('month', NOW()) + INTERVAL '1 month'
+           ${athleteFilter}
+         GROUP BY date_trunc('month', start_date_local)
+       )
+       SELECT
+         to_char(m.month_start, 'YYYY-MM') AS month,
+         COALESCE(a.total_distance_km, 0) AS total_distance_km
+       FROM months m
+       LEFT JOIN agg a ON a.month_start = m.month_start
+       ORDER BY m.month_start`,
       params
     );
 
@@ -289,17 +322,24 @@ export class PgActivityRepository implements ActivityRepository {
   }
 
   private async getActivityHeatmap(athleteId: number | null): Promise<HeatmapDay[]> {
-    const athleteFilter = athleteId ? 'AND athlete_id = $1' : '';
+    const athleteFilter = athleteId ? 'WHERE athlete_id = $1' : '';
     const params: unknown[] = athleteId ? [athleteId] : [];
 
+    // Heatmap de los 365 días previos a la actividad más reciente del atleta.
     const { rows } = await this.pool.query(
-      `SELECT
-         to_char(start_date_local::date, 'YYYY-MM-DD') AS date,
+      `WITH anchor AS (
+         SELECT COALESCE(MAX(start_date_local), NOW()) AS d
+         FROM activities ${athleteFilter}
+       )
+       SELECT
+         to_char(a.start_date_local::date, 'YYYY-MM-DD') AS date,
          COUNT(*) AS count
-       FROM activities
-       WHERE start_date_local >= NOW() - INTERVAL '365 days' ${athleteFilter}
-       GROUP BY start_date_local::date
-       ORDER BY start_date_local::date`,
+       FROM activities a, anchor
+       WHERE a.start_date_local >= anchor.d - INTERVAL '365 days'
+         AND a.start_date_local <= anchor.d
+         ${athleteId ? 'AND a.athlete_id = $1' : ''}
+       GROUP BY a.start_date_local::date
+       ORDER BY a.start_date_local::date`,
       params
     );
 

@@ -1,12 +1,51 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import { pool } from '../../database/pool';
 import { PgActivityRepository } from '../../persistence/PgActivityRepository';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { ForbiddenError } from '../../../domain/shared/DomainError';
+import { CreateActivityUseCase } from '../../../application/activity/CreateActivityUseCase';
 
 const router = Router();
 
 router.use(authMiddleware);
+
+const createActivitySchema = z.object({
+  name: z.string().min(1, 'El nombre es obligatorio').max(200),
+  sportType: z.string().min(1).max(50),
+  startDateLocal: z.string().min(1),
+  timezone: z.string().optional(),
+  distance: z.number().nonnegative(),
+  movingTime: z.number().int().positive(),
+  elapsedTime: z.number().int().positive(),
+  totalElevationGain: z.number().nonnegative().optional(),
+  averageHeartrate: z.number().positive().optional(),
+  maxHeartrate: z.number().positive().optional(),
+  averageCadence: z.number().nonnegative().optional(),
+  maxSpeed: z.number().nonnegative().optional(),
+  averageTemp: z.number().optional(),
+  sufferScore: z.number().min(0).max(100).optional(),
+  calories: z.number().nonnegative().optional(),
+  description: z.string().max(2000).optional(),
+  trainer: z.boolean().optional(),
+  commute: z.boolean().optional(),
+  deviceName: z.string().max(100).optional(),
+});
+
+router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const parsed = createActivitySchema.parse(req.body);
+    const activityRepo = new PgActivityRepository(pool);
+    const useCase = new CreateActivityUseCase(activityRepo);
+    const activity = await useCase.execute({
+      ...parsed,
+      athleteId: req.user!.sub,
+    });
+    res.status(201).json({ activity });
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {

@@ -255,12 +255,15 @@ export class PgAthleteRepository implements AthleteRepository {
 
   async findAll(): Promise<AthletePublic[]> {
     const { rows } = await this.pool.query(
-      `SELECT id, firstname, lastname, username, email, role,
-              profile_medium_url, max_heartrate, resting_heartrate, weight,
-              strava_id, strava_scope, last_strava_sync_at,
-              created_at, updated_at
-       FROM athletes
-       ORDER BY created_at ASC`
+      `SELECT a.id, a.firstname, a.lastname, a.username, a.email, a.role,
+              a.profile_medium_url, a.strava_id, a.strava_scope,
+              a.last_strava_sync_at, a.last_strava_sync_status,
+              a.created_at, a.updated_at,
+              COUNT(ac.id)::int AS activity_count
+       FROM athletes a
+       LEFT JOIN activities ac ON ac.athlete_id = a.id
+       GROUP BY a.id
+       ORDER BY a.created_at ASC`
     );
     return rows.map((r) => ({
       id: r.id,
@@ -270,12 +273,11 @@ export class PgAthleteRepository implements AthleteRepository {
       email: r.email ?? null,
       role: r.role as 'admin' | 'user',
       profileMediumUrl: r.profile_medium_url,
-      maxHeartrate: r.max_heartrate,
-      restingHeartrate: r.resting_heartrate,
-      weight: r.weight,
       stravaId: r.strava_id ? Number(r.strava_id) : undefined,
       stravaScope: r.strava_scope ?? undefined,
       lastStravaSyncAt: r.last_strava_sync_at ?? undefined,
+      lastStravaSyncStatus: r.last_strava_sync_status ?? undefined,
+      activityCount: r.activity_count ?? 0,
       createdAt: r.created_at,
       updatedAt: r.updated_at,
     }));
@@ -283,5 +285,12 @@ export class PgAthleteRepository implements AthleteRepository {
 
   async deleteById(id: number): Promise<void> {
     await this.pool.query('DELETE FROM athletes WHERE id = $1', [id]);
+  }
+
+  async updateRole(athleteId: number, role: 'admin' | 'user'): Promise<void> {
+    await this.pool.query('UPDATE athletes SET role = $1, updated_at = NOW() WHERE id = $2', [
+      role,
+      athleteId,
+    ]);
   }
 }

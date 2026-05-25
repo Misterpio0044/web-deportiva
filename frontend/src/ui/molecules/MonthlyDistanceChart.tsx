@@ -33,11 +33,14 @@ function formatMonth(yyyyMm: string): string {
   return MONTH_LABELS[mm] ?? yyyyMm;
 }
 
+function buildFullYear(data: MonthlyDistance[]): { label: string; km: number }[] {
+  // El backend devuelve siempre los 12 meses más recientes (ventana móvil),
+  // rellenando con 0 los meses sin actividad.
+  return data.map((d) => ({ label: formatMonth(d.month), km: d.totalDistanceKm }));
+}
+
 export function MonthlyDistanceChart({ data }: Props) {
-  const chartData = data.map((d) => ({
-    label: formatMonth(d.month),
-    km: d.totalDistanceKm,
-  }));
+  const chartData = buildFullYear(data);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -53,7 +56,7 @@ export function MonthlyDistanceChart({ data }: Props) {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+          <XAxis dataKey="label" interval={0} tick={{ fontSize: 11, fill: '#94a3b8' }} />
           <YAxis
             tick={{ fontSize: 11, fill: '#94a3b8' }}
             tickFormatter={(v: number) => `${v} km`}

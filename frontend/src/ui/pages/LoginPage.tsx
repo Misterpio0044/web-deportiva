@@ -94,30 +94,6 @@ export function LoginPage() {
             </p>
           </CardContent>
         </Card>
-
-        {/* Demo credentials */}
-        <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500">
-          <p className="mb-2 font-semibold text-slate-700">Credenciales de demo</p>
-          <div className="space-y-1">
-            <div className="flex justify-between">
-              <span className="font-mono">admin@demo.com</span>
-              <span>
-                <span className="font-mono">admin123</span>
-                <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 font-medium text-amber-700">
-                  Admin
-                </span>
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-mono">user1@demo.com</span>
-              <span className="font-mono">user123</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-mono">user2@demo.com</span>
-              <span className="font-mono">user123</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
