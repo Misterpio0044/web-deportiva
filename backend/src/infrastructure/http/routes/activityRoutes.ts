@@ -129,9 +129,12 @@ router.get('/:id/gpx', async (req: Request, res: Response, next: NextFunction) =
   }
 });
 
+// Nota: los ids llegan como `number` o `string` (las columnas BIGINT de Postgres
+// se serializan como string al cliente para preservar la precisión), por eso
+// coercionamos a número antes de validar.
 const exportManySchema = z.object({
   ids: z
-    .array(z.number().int())
+    .array(z.coerce.number().int())
     .min(1, 'Selecciona al menos una actividad')
     .max(200, 'Máximo 200 actividades por exportación'),
 });

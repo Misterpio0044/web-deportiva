@@ -220,4 +220,26 @@ describe('POST /api/activities/export/gpx', () => {
       .send({ ids: [1] });
     expect(res.status).toBe(401);
   });
+
+  // Regresión: las columnas BIGINT de Postgres llegan al frontend como strings,
+  // por lo que el cliente puede reenviarlas como strings en el array de ids.
+  it('200 acepta ids enviados como string', async () => {
+    repos.activity.findById
+      .mockResolvedValueOnce(makeActivity({ id: 1, athleteId: 1 }))
+      .mockResolvedValueOnce(makeActivity({ id: 2, athleteId: 1 }));
+    const res = await request(app)
+      .post('/api/activities/export/gpx')
+      .set('Authorization', `Bearer ${userToken(1)}`)
+      .send({ ids: ['1', '2'] })
+      .buffer(true)
+      .parse((res, cb) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => cb(null, Buffer.concat(chunks)));
+      });
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('application/zip');
+    expect(repos.activity.findById).toHaveBeenCalledWith(1);
+    expect(repos.activity.findById).toHaveBeenCalledWith(2);
+  });
 });
