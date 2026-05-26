@@ -41,7 +41,8 @@ function rowToActivity(row: Record<string, unknown>): Activity {
     commute: row.commute as boolean,
     deviceName: row.device_name as string | undefined,
     description: row.description as string | undefined,
-    startLatitude: row.start_latitude != null ? parseFloat(row.start_latitude as string) : undefined,
+    startLatitude:
+      row.start_latitude != null ? parseFloat(row.start_latitude as string) : undefined,
     startLongitude:
       row.start_longitude != null ? parseFloat(row.start_longitude as string) : undefined,
     endLatitude: row.end_latitude != null ? parseFloat(row.end_latitude as string) : undefined,

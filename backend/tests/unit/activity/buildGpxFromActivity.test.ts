@@ -60,9 +60,7 @@ describe('buildGpxFromActivity', () => {
 
 describe('buildGpxFilename', () => {
   it('genera un nombre seguro YYYY-MM-DD_slug.gpx', () => {
-    const f = buildGpxFilename(
-      makeActivity({ name: 'Rodaje suave – Retiro (8km)' })
-    );
+    const f = buildGpxFilename(makeActivity({ name: 'Rodaje suave – Retiro (8km)' }));
     expect(f).toMatch(/^2024-05-20_rodaje-suave-retiro-8km\.gpx$/);
   });
 

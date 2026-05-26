@@ -66,21 +66,16 @@ export const activitiesApi = {
   create: (input: CreateActivityInput) =>
     apiClient.post<{ activity: ActivityDetail }>('/activities', input).then((r) => r.data.activity),
   exportOne: (id: number) =>
-    apiClient
-      .get<Blob>(`/activities/${id}/gpx`, { responseType: 'blob' })
-      .then((r) => ({
-        blob: r.data,
-        filename: parseFilenameFromContentDisposition(r.headers['content-disposition']),
-      })),
+    apiClient.get<Blob>(`/activities/${id}/gpx`, { responseType: 'blob' }).then((r) => ({
+      blob: r.data,
+      filename: parseFilenameFromContentDisposition(r.headers['content-disposition']),
+    })),
   exportMany: (ids: number[]) =>
-    apiClient
-      .post<Blob>('/activities/export/gpx', { ids }, { responseType: 'blob' })
-      .then((r) => ({
-        blob: r.data,
-        filename:
-          parseFilenameFromContentDisposition(r.headers['content-disposition']) ??
-          'actividades.zip',
-      })),
+    apiClient.post<Blob>('/activities/export/gpx', { ids }, { responseType: 'blob' }).then((r) => ({
+      blob: r.data,
+      filename:
+        parseFilenameFromContentDisposition(r.headers['content-disposition']) ?? 'actividades.zip',
+    })),
 };
 
 function parseFilenameFromContentDisposition(header: unknown): string | undefined {

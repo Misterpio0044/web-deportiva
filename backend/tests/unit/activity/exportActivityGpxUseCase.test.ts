@@ -36,17 +36,13 @@ describe('ExportActivityGpxUseCase.executeOne', () => {
   it('lanza ForbiddenError si user intenta exportar actividad ajena', async () => {
     repo.findById.mockResolvedValue(makeActivity({ id: 5, athleteId: 999 }));
     const uc = new ExportActivityGpxUseCase(repo as any);
-    await expect(uc.executeOne(5, { sub: 1, role: 'user' })).rejects.toBeInstanceOf(
-      ForbiddenError
-    );
+    await expect(uc.executeOne(5, { sub: 1, role: 'user' })).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('lanza NotFoundError si no existe', async () => {
     repo.findById.mockResolvedValue(null);
     const uc = new ExportActivityGpxUseCase(repo as any);
-    await expect(uc.executeOne(1, { sub: 1, role: 'user' })).rejects.toBeInstanceOf(
-      NotFoundError
-    );
+    await expect(uc.executeOne(1, { sub: 1, role: 'user' })).rejects.toBeInstanceOf(NotFoundError);
   });
 });
 

@@ -1,7 +1,10 @@
 import { ActivityRepository } from '../../domain/activity/ActivityRepository';
 import { Activity } from '../../domain/activity/Activity';
 import { ForbiddenError, NotFoundError } from '../../domain/shared/DomainError';
-import { buildGpxFilename, buildGpxFromActivity } from '../../infrastructure/gpx/buildGpxFromActivity';
+import {
+  buildGpxFilename,
+  buildGpxFromActivity,
+} from '../../infrastructure/gpx/buildGpxFromActivity';
 
 export interface ExportActivityGpxRequester {
   sub: number;
@@ -17,7 +20,10 @@ export interface ExportedGpx {
 export class ExportActivityGpxUseCase {
   constructor(private readonly activityRepo: ActivityRepository) {}
 
-  async executeOne(activityId: number, requester: ExportActivityGpxRequester): Promise<ExportedGpx> {
+  async executeOne(
+    activityId: number,
+    requester: ExportActivityGpxRequester
+  ): Promise<ExportedGpx> {
     const activity = await this.activityRepo.findById(activityId);
     if (!activity) {
       throw new NotFoundError('Actividad');
@@ -38,10 +44,7 @@ export class ExportActivityGpxUseCase {
    * inexistentes. Devuelve los GPX generados con un nombre de fichero único
    * dentro del lote.
    */
-  async executeMany(
-    ids: number[],
-    requester: ExportActivityGpxRequester
-  ): Promise<ExportedGpx[]> {
+  async executeMany(ids: number[], requester: ExportActivityGpxRequester): Promise<ExportedGpx[]> {
     const unique = Array.from(new Set(ids));
     const found = await Promise.all(unique.map((id) => this.activityRepo.findById(id)));
     const allowed = found.filter(

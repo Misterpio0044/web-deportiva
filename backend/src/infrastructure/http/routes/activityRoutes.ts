@@ -122,10 +122,7 @@ router.get('/:id/gpx', async (req: Request, res: Response, next: NextFunction) =
       role: req.user!.role,
     });
     res.setHeader('Content-Type', 'application/gpx+xml; charset=utf-8');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${result.filename}"`
-    );
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
     res.status(200).send(result.xml);
   } catch (err) {
     next(err);

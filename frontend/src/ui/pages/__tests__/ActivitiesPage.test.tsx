@@ -153,8 +153,6 @@ describe('ActivitiesPage — modo selección y exportación GPX', () => {
     await userEvent.click(screen.getByRole('button', { name: /Seleccionar todas/i }));
     await userEvent.click(screen.getByRole('button', { name: /Descargar GPX/i }));
 
-    expect(
-      await screen.findByText(/No se pudo completar la exportación/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/No se pudo completar la exportación/i)).toBeInTheDocument();
   });
 });
