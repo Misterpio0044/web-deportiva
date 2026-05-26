@@ -3,4 +3,5 @@ Importar una actividad
   -- Desde archivo gpx
   -- Desde la API de strava
 
+
 No hace falta llevarlo a servidores pero en el relatorio puedo mencionarlo
