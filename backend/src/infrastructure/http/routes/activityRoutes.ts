@@ -1,10 +1,19 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import { createRequire } from 'node:module';
 import { pool } from '../../database/pool';
 import { PgActivityRepository } from '../../persistence/PgActivityRepository';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { ForbiddenError } from '../../../domain/shared/DomainError';
 import { CreateActivityUseCase } from '../../../application/activity/CreateActivityUseCase';
+import { ExportActivityGpxUseCase } from '../../../application/activity/ExportActivityGpxUseCase';
+
+// archiver v8 cambió la API: el módulo ya no es una función invocable, expone
+// constructores nombrados. Usamos createRequire para evitar problemas de interop
+// ESM/CJS bajo tsx y bajo el loader de Vitest.
+const requireCjs = createRequire(import.meta.url);
+const archiverMod = requireCjs('archiver') as typeof import('archiver');
+const { ZipArchive } = archiverMod;
 
 const router = Router();
 
@@ -92,6 +101,72 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
     }
 
     res.status(200).json({ activity });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Exportación a GPX ──────────────────────────────────────────────────────
+
+router.get('/:id/gpx', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const activityRepo = new PgActivityRepository(pool);
+    const useCase = new ExportActivityGpxUseCase(activityRepo);
+    const activityId = parseInt(String(req.params.id), 10);
+    if (Number.isNaN(activityId)) {
+      res.status(400).json({ message: 'Id de actividad inválido', code: 'BAD_REQUEST' });
+      return;
+    }
+    const result = await useCase.executeOne(activityId, {
+      sub: req.user!.sub,
+      role: req.user!.role,
+    });
+    res.setHeader('Content-Type', 'application/gpx+xml; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${result.filename}"`
+    );
+    res.status(200).send(result.xml);
+  } catch (err) {
+    next(err);
+  }
+});
+
+const exportManySchema = z.object({
+  ids: z
+    .array(z.number().int())
+    .min(1, 'Selecciona al menos una actividad')
+    .max(200, 'Máximo 200 actividades por exportación'),
+});
+
+router.post('/export/gpx', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { ids } = exportManySchema.parse(req.body);
+    const activityRepo = new PgActivityRepository(pool);
+    const useCase = new ExportActivityGpxUseCase(activityRepo);
+    const exports = await useCase.executeMany(ids, {
+      sub: req.user!.sub,
+      role: req.user!.role,
+    });
+
+    if (exports.length === 0) {
+      res.status(404).json({
+        message: 'No hay actividades exportables en la selección',
+        code: 'NOT_FOUND',
+      });
+      return;
+    }
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="actividades.zip"');
+
+    const archive = new ZipArchive({ zlib: { level: 9 } });
+    archive.on('error', (err) => next(err));
+    archive.pipe(res);
+    for (const e of exports) {
+      archive.append(e.xml, { name: e.filename });
+    }
+    await archive.finalize();
   } catch (err) {
     next(err);
   }
