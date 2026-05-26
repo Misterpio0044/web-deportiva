@@ -136,3 +136,88 @@ describe('GET /api/activities/:id', () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe('GET /api/activities/:id/gpx', () => {
+  it('200 devuelve GPX con cabeceras correctas para el dueño', async () => {
+    repos.activity.findById.mockResolvedValue(makeActivity({ id: 5, athleteId: 1 }));
+    const res = await request(app)
+      .get('/api/activities/5/gpx')
+      .set('Authorization', `Bearer ${userToken(1)}`);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('application/gpx+xml');
+    expect(res.headers['content-disposition']).toMatch(/attachment; filename=".+\.gpx"/);
+    expect(res.text).toContain('<gpx');
+  });
+
+  it('403 si la actividad es de otro user', async () => {
+    repos.activity.findById.mockResolvedValue(makeActivity({ id: 5, athleteId: 999 }));
+    const res = await request(app)
+      .get('/api/activities/5/gpx')
+      .set('Authorization', `Bearer ${userToken(1)}`);
+    expect(res.status).toBe(403);
+  });
+
+  it('404 si no existe', async () => {
+    repos.activity.findById.mockResolvedValue(null);
+    const res = await request(app)
+      .get('/api/activities/5/gpx')
+      .set('Authorization', `Bearer ${userToken()}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('401 sin token', async () => {
+    const res = await request(app).get('/api/activities/5/gpx');
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('POST /api/activities/export/gpx', () => {
+  it('200 zip con un .gpx por actividad permitida', async () => {
+    repos.activity.findById
+      .mockResolvedValueOnce(makeActivity({ id: 1, athleteId: 1 }))
+      .mockResolvedValueOnce(makeActivity({ id: 2, athleteId: 1 }));
+    const res = await request(app)
+      .post('/api/activities/export/gpx')
+      .set('Authorization', `Bearer ${userToken(1)}`)
+      .send({ ids: [1, 2] })
+      .buffer(true)
+      .parse((res, cb) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => cb(null, Buffer.concat(chunks)));
+      });
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('application/zip');
+    expect(res.headers['content-disposition']).toContain('actividades.zip');
+    // Firma PK\x03\x04 de un zip
+    const body = res.body as Buffer;
+    expect(body[0]).toBe(0x50);
+    expect(body[1]).toBe(0x4b);
+  });
+
+  it('400 si ids está vacío', async () => {
+    const res = await request(app)
+      .post('/api/activities/export/gpx')
+      .set('Authorization', `Bearer ${userToken()}`)
+      .send({ ids: [] });
+    expect(res.status).toBe(400);
+  });
+
+  it('404 si ninguna de las ids pertenece al user', async () => {
+    repos.activity.findById
+      .mockResolvedValueOnce(makeActivity({ id: 1, athleteId: 999 }))
+      .mockResolvedValueOnce(null);
+    const res = await request(app)
+      .post('/api/activities/export/gpx')
+      .set('Authorization', `Bearer ${userToken(1)}`)
+      .send({ ids: [1, 2] });
+    expect(res.status).toBe(404);
+  });
+
+  it('401 sin token', async () => {
+    const res = await request(app)
+      .post('/api/activities/export/gpx')
+      .send({ ids: [1] });
+    expect(res.status).toBe(401);
+  });
+});

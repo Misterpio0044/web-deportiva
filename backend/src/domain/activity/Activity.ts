@@ -24,5 +24,9 @@ export interface Activity {
   commute: boolean;
   deviceName?: string;
   description?: string;
+  startLatitude?: number;
+  startLongitude?: number;
+  endLatitude?: number;
+  endLongitude?: number;
   createdAt: Date;
 }
