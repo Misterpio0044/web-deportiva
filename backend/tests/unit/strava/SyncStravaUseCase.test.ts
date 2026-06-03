@@ -84,7 +84,9 @@ describe('SyncStravaUseCase', () => {
       ]),
     });
 
-    const result = await new SyncStravaUseCase(aRepo, actRepo, client, gearRepo).execute({ athleteId: 1 });
+    const result = await new SyncStravaUseCase(aRepo, actRepo, client, gearRepo).execute({
+      athleteId: 1,
+    });
 
     expect(result.activitiesSynced).toBe(3);
     expect(result.created).toBe(2);
@@ -92,9 +94,12 @@ describe('SyncStravaUseCase', () => {
     expect(result.gearSynced).toBe(1);
     expect(aRepo.updateStravaProfile).toHaveBeenCalledTimes(1);
     expect(aRepo.recordSyncSuccess).toHaveBeenCalledTimes(1);
-    expect(gearRepo.upsertManyForAthlete).toHaveBeenCalledWith(1, expect.arrayContaining([
-      expect.objectContaining({ id: 'g1', name: 'Nike Vaporfly', isPrimary: true }),
-    ]));
+    expect(gearRepo.upsertManyForAthlete).toHaveBeenCalledWith(
+      1,
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'g1', name: 'Nike Vaporfly', isPrimary: true }),
+      ])
+    );
   });
 
   it('upserta gear ANTES de las actividades para que la FK no se anule', async () => {

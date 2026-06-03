@@ -44,10 +44,10 @@ export class PgGearRepository implements GearRepository {
       await client.query('BEGIN');
 
       // Eliminar gear que ya no existe en la cuenta de Strava del atleta
-      await client.query(
-        `DELETE FROM gear WHERE athlete_id = $1 AND id <> ALL($2::varchar[])`,
-        [athleteId, ids]
-      );
+      await client.query(`DELETE FROM gear WHERE athlete_id = $1 AND id <> ALL($2::varchar[])`, [
+        athleteId,
+        ids,
+      ]);
 
       // Upsert de cada gear
       for (const g of gears) {

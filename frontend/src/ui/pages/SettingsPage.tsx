@@ -227,7 +227,9 @@ export function SettingsPage() {
                 <select
                   id="measurementPreference"
                   value={measurementPreference}
-                  onChange={(e) => setMeasurementPreference(e.target.value as 'meters' | 'feet' | '')}
+                  onChange={(e) =>
+                    setMeasurementPreference(e.target.value as 'meters' | 'feet' | '')
+                  }
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                 >
                   <option value="">Sin cambiar</option>

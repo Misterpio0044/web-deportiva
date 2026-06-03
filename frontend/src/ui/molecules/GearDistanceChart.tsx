@@ -63,7 +63,8 @@ export function GearDistanceChart({ data }: Props) {
           <Tooltip
             formatter={(value, _name, item) => {
               const v = Number(value);
-              const acts = (item?.payload as { actividades?: number } | undefined)?.actividades ?? 0;
+              const acts =
+                (item?.payload as { actividades?: number } | undefined)?.actividades ?? 0;
               return [
                 `${formatKm(v * 1000)} · ${acts} actividad${acts === 1 ? '' : 'es'}`,
                 'Distancia',

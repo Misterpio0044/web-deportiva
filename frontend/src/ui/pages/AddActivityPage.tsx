@@ -74,7 +74,10 @@ export function AddActivityPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    gearApi.stats().then(setGearList).catch(() => {});
+    gearApi
+      .stats()
+      .then(setGearList)
+      .catch(() => {});
   }, []);
 
   function set<K extends keyof ManualForm>(key: K, value: ManualForm[K]) {
@@ -444,7 +447,9 @@ export function AddActivityPage() {
                     <option value="">Sin asignar</option>
                     {gearList.map((g) => (
                       <option key={g.gearId} value={g.gearId}>
-                        {g.name}{g.brand ? ` (${g.brand})` : ''}{g.isPrimary ? ' ★' : ''}
+                        {g.name}
+                        {g.brand ? ` (${g.brand})` : ''}
+                        {g.isPrimary ? ' ★' : ''}
                       </option>
                     ))}
                   </select>
