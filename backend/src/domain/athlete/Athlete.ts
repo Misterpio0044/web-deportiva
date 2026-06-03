@@ -7,6 +7,8 @@ export interface Athlete {
   role: 'admin' | 'user';
   passwordHash: string | null;
   profileMediumUrl?: string;
+  profileUrl?: string;
+  measurementPreference?: string;
   maxHeartrate?: number;
   restingHeartrate?: number;
   weight?: number;

@@ -1,16 +1,19 @@
 import type { DashboardData } from '../../infrastructure/api/dashboardApi';
+import type { GearStat } from '../../infrastructure/api/gearApi';
 import { WeeklyVolumeChart } from '../molecules/WeeklyVolumeChart';
 import { MonthlyDistanceChart } from '../molecules/MonthlyDistanceChart';
 import { HeartRateZonesChart } from '../molecules/HeartRateZonesChart';
+import { GearDistanceChart } from '../molecules/GearDistanceChart';
 import { StatCard } from '../atoms/StatCard';
 import { formatTotalDistance, formatPace } from '../../lib/formatters';
 import { Activity, Route, Heart } from 'lucide-react';
 
 interface Props {
   data: DashboardData;
+  gearStats: GearStat[];
 }
 
-export function DashboardGrid({ data }: Props) {
+export function DashboardGrid({ data, gearStats }: Props) {
   return (
     <div className="space-y-6">
       {/* Stat cards */}
@@ -40,6 +43,7 @@ export function DashboardGrid({ data }: Props) {
         <WeeklyVolumeChart data={data.weeklyVolume} />
         <MonthlyDistanceChart data={data.monthlyDistance} />
         <HeartRateZonesChart data={data.heartRateZones} />
+        <GearDistanceChart data={gearStats} />
       </div>
     </div>
   );

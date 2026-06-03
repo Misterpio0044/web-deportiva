@@ -29,6 +29,9 @@ export interface UpdateProfilePayload {
   lastname?: string;
   username?: string;
   email?: string;
+  maxHeartrate?: number;
+  restingHeartrate?: number;
+  measurementPreference?: 'meters' | 'feet';
 }
 
 export interface ChangePasswordPayload {

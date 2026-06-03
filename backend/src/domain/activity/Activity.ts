@@ -7,6 +7,7 @@ export interface Activity {
   startDate: Date;
   startDateLocal: Date;
   timezone: string;
+  utcOffset?: number;
   distance: number;
   movingTime: number;
   elapsedTime: number;

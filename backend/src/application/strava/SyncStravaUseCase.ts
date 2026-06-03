@@ -1,9 +1,12 @@
 import { ActivityRepository } from '../../domain/activity/ActivityRepository';
 import { Activity } from '../../domain/activity/Activity';
 import { AthleteRepository } from '../../domain/athlete/AthleteRepository';
+import { GearRepository } from '../../domain/gear/GearRepository';
+import { Gear } from '../../domain/gear/Gear';
 import { NotFoundError, ValidationError } from '../../domain/shared/DomainError';
 import {
   StravaActivitySummary,
+  StravaGearSummary,
   StravaApiClient,
   StravaApiError,
 } from '../../infrastructure/strava/StravaApiClient';
@@ -18,6 +21,7 @@ export interface SyncStravaOutput {
   activitiesSynced: number;
   created: number;
   updated: number;
+  gearSynced: number;
   profileUpdated: boolean;
   lastSyncAt: Date;
 }
@@ -32,6 +36,7 @@ function mapActivity(athleteId: number, raw: StravaActivitySummary): Activity {
     startDate: new Date(raw.start_date),
     startDateLocal: new Date(raw.start_date_local),
     timezone: raw.timezone,
+    utcOffset: raw.utc_offset,
     distance: raw.distance,
     movingTime: raw.moving_time,
     elapsedTime: raw.elapsed_time,
@@ -53,11 +58,23 @@ function mapActivity(athleteId: number, raw: StravaActivitySummary): Activity {
   };
 }
 
+function mapGear(athleteId: number, raw: StravaGearSummary): Gear {
+  return {
+    id: raw.id,
+    athleteId,
+    name: raw.name,
+    isPrimary: raw.primary,
+    distance: raw.distance,
+    createdAt: new Date(),
+  };
+}
+
 export class SyncStravaUseCase {
   constructor(
     private readonly athleteRepo: AthleteRepository,
     private readonly activityRepo: ActivityRepository,
-    private readonly stravaClient: StravaApiClient
+    private readonly stravaClient: StravaApiClient,
+    private readonly gearRepo: GearRepository
   ) {}
 
   async execute(input: SyncStravaInput): Promise<SyncStravaOutput> {
@@ -76,16 +93,24 @@ export class SyncStravaUseCase {
         this.stravaClient
       );
 
-      // 1. Perfil
+      // 1. Perfil + gear (desde /athlete)
       const stravaAthlete = await this.stravaClient.getAthlete(accessToken);
       await this.athleteRepo.updateStravaProfile(athlete.id, {
         firstname: stravaAthlete.firstname,
         lastname: stravaAthlete.lastname,
         profileMediumUrl: stravaAthlete.profile_medium,
+        profileUrl: stravaAthlete.profile,
         weight: stravaAthlete.weight,
+        measurementPreference: stravaAthlete.measurement_preference,
       });
 
-      // 2. Actividades
+      // 2. Upsert de gear ANTES de las actividades para que la FK no se anule
+      // Solo zapatillas: la web es exclusivamente para running.
+      const rawGear = stravaAthlete.shoes ?? [];
+      const mappedGear = rawGear.map((g) => mapGear(athlete.id, g));
+      await this.gearRepo.upsertManyForAthlete(athlete.id, mappedGear);
+
+      // 3. Actividades
       const raws = await this.stravaClient.listActivities(accessToken, {
         perPage: input.perPage ?? 30,
       });
@@ -102,6 +127,7 @@ export class SyncStravaUseCase {
         activitiesSynced: created + updated,
         created,
         updated,
+        gearSynced: mappedGear.length,
         profileUpdated: true,
         lastSyncAt: now,
       };

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { pool } from '../../database/pool';
 import { PgAthleteRepository } from '../../persistence/PgAthleteRepository';
 import { PgActivityRepository } from '../../persistence/PgActivityRepository';
+import { PgGearRepository } from '../../persistence/PgGearRepository';
 import { StravaApiClient } from '../../strava/StravaApiClient';
 import { getStravaConfig } from '../../strava/stravaConfig';
 import { BuildStravaAuthorizeUrlUseCase } from '../../../application/strava/BuildStravaAuthorizeUrlUseCase';
@@ -16,9 +17,10 @@ import { UnauthorizedError, NotFoundError } from '../../../domain/shared/DomainE
 function buildDeps() {
   const athleteRepo = new PgAthleteRepository(pool);
   const activityRepo = new PgActivityRepository(pool);
+  const gearRepo = new PgGearRepository(pool);
   const stravaClient = new StravaApiClient();
-  const syncUseCase = new SyncStravaUseCase(athleteRepo, activityRepo, stravaClient);
-  return { athleteRepo, activityRepo, stravaClient, syncUseCase };
+  const syncUseCase = new SyncStravaUseCase(athleteRepo, activityRepo, stravaClient, gearRepo);
+  return { athleteRepo, activityRepo, gearRepo, stravaClient, syncUseCase };
 }
 
 const callbackSchema = z.object({
@@ -113,9 +115,8 @@ stravaActionRouter.get('/status', async (req: Request, res: Response, next: Next
 stravaActionRouter.post('/sync', async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) throw new UnauthorizedError();
-    const { athleteRepo, activityRepo, stravaClient } = buildDeps();
-    const useCase = new SyncStravaUseCase(athleteRepo, activityRepo, stravaClient);
-    const result = await useCase.execute({ athleteId: req.user.sub });
+    const { syncUseCase } = buildDeps();
+    const result = await syncUseCase.execute({ athleteId: req.user.sub });
     res.json(result);
   } catch (err) {
     next(err);

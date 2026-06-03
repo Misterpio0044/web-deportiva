@@ -18,6 +18,9 @@ export function SettingsPage() {
   const [username, setUsername] = useState('');
   const [originalUsername, setOriginalUsername] = useState('');
   const [email, setEmail] = useState(user?.email ?? '');
+  const [maxHeartrate, setMaxHeartrate] = useState('');
+  const [restingHeartrate, setRestingHeartrate] = useState('');
+  const [measurementPreference, setMeasurementPreference] = useState<'meters' | 'feet' | ''>('');
   const [hasPasswordLocal, setHasPasswordLocal] = useState(true);
 
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -63,11 +66,14 @@ export function SettingsPage() {
     setProfileMsg('');
 
     // Solo envía los campos cambiados respecto al user actual
-    const payload: Record<string, string> = {};
+    const payload: Record<string, string | number> = {};
     if (firstname.trim() !== (user?.firstname ?? '')) payload.firstname = firstname.trim();
     if (lastname.trim() !== (user?.lastname ?? '')) payload.lastname = lastname.trim();
     if (username.trim() !== originalUsername) payload.username = username.trim();
     if (email.trim().toLowerCase() !== (user?.email ?? '')) payload.email = email.trim();
+    if (maxHeartrate !== '') payload.maxHeartrate = Number(maxHeartrate);
+    if (restingHeartrate !== '') payload.restingHeartrate = Number(restingHeartrate);
+    if (measurementPreference !== '') payload.measurementPreference = measurementPreference;
 
     if (Object.keys(payload).length === 0) {
       setProfileError('No hay cambios que guardar');
@@ -187,6 +193,47 @@ export function SettingsPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="maxHeartrate">FC máxima (bpm)</Label>
+                  <Input
+                    id="maxHeartrate"
+                    type="number"
+                    min={1}
+                    max={250}
+                    value={maxHeartrate}
+                    onChange={(e) => setMaxHeartrate(e.target.value)}
+                    placeholder="Ej: 185"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="restingHeartrate">FC en reposo (bpm)</Label>
+                  <Input
+                    id="restingHeartrate"
+                    type="number"
+                    min={1}
+                    max={150}
+                    value={restingHeartrate}
+                    onChange={(e) => setRestingHeartrate(e.target.value)}
+                    placeholder="Ej: 55"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="measurementPreference">Unidades de medida</Label>
+                <select
+                  id="measurementPreference"
+                  value={measurementPreference}
+                  onChange={(e) => setMeasurementPreference(e.target.value as 'meters' | 'feet' | '')}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                >
+                  <option value="">Sin cambiar</option>
+                  <option value="meters">Métrico (km, metros)</option>
+                  <option value="feet">Imperial (millas, pies)</option>
+                </select>
               </div>
 
               {profileError && (

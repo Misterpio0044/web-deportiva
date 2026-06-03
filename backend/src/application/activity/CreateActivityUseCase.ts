@@ -22,6 +22,7 @@ export interface CreateActivityInput {
   trainer?: boolean;
   commute?: boolean;
   deviceName?: string;
+  gearId?: string;
 }
 
 export class CreateActivityUseCase {
@@ -55,6 +56,7 @@ export class CreateActivityUseCase {
     const activity: Activity = {
       id,
       athleteId: input.athleteId,
+      gearId: input.gearId,
       name: input.name.trim() || 'Actividad sin nombre',
       sportType: input.sportType,
       startDate: startDate,

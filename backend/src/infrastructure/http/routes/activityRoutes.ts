@@ -39,6 +39,7 @@ const createActivitySchema = z.object({
   trainer: z.boolean().optional(),
   commute: z.boolean().optional(),
   deviceName: z.string().max(100).optional(),
+  gearId: z.string().max(50).optional(),
 });
 
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {

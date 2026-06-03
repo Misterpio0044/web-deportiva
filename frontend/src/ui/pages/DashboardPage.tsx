@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../application/auth/useAuthStore';
 import { dashboardApi } from '../../infrastructure/api/dashboardApi';
 import type { DashboardData } from '../../infrastructure/api/dashboardApi';
+import { gearApi } from '../../infrastructure/api/gearApi';
+import type { GearStat } from '../../infrastructure/api/gearApi';
 import { athletesApi } from '../../infrastructure/api/athletesApi';
 import type { AthletePublic } from '../../infrastructure/api/athletesApi';
 import { AppShell } from '../templates/AppShell';
@@ -31,6 +33,7 @@ export function DashboardPage() {
   }, [searchParams, setSearchParams]);
 
   const [data, setData] = useState<DashboardData | null>(null);
+  const [gearStats, setGearStats] = useState<GearStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshTick, setRefreshTick] = useState(0);
@@ -55,10 +58,19 @@ export function DashboardPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError('');
-    dashboardApi
-      .get(selectedAthleteId === 'global' ? undefined : selectedAthleteId)
-      .then((d) => {
-        if (!cancelled) setData(d);
+
+    const isGlobal = selectedAthleteId === 'global';
+    const athleteId = isGlobal ? undefined : selectedAthleteId;
+
+    Promise.all([
+      dashboardApi.get(athleteId),
+      gearApi.stats(isGlobal ? { global: true } : athleteId != null ? { athleteId } : {}),
+    ])
+      .then(([dashData, gearData]) => {
+        if (!cancelled) {
+          setData(dashData);
+          setGearStats(gearData);
+        }
       })
       .catch(() => {
         if (!cancelled) setError('Error al cargar el dashboard. ¿Está el servidor corriendo?');
@@ -124,7 +136,7 @@ export function DashboardPage() {
             initialError={stravaError}
           />
         )}
-        {!loading && !error && data && <DashboardGrid data={data} />}
+        {!loading && !error && data && <DashboardGrid data={data} gearStats={gearStats} />}
       </div>
     </AppShell>
   );

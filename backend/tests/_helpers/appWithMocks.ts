@@ -16,6 +16,10 @@ vi.mock('../../src/infrastructure/persistence/PgActivityRepository', () => ({
   PgActivityRepository: vi.fn().mockImplementation(() => mockRepos.activity),
 }));
 
+vi.mock('../../src/infrastructure/persistence/PgGearRepository', () => ({
+  PgGearRepository: vi.fn().mockImplementation(() => mockRepos.gear),
+}));
+
 vi.mock('../../src/infrastructure/strava/StravaApiClient', async () => {
   const actual = await vi.importActual<
     typeof import('../../src/infrastructure/strava/StravaApiClient')

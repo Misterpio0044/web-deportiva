@@ -7,6 +7,7 @@ import athleteRoutes from './http/routes/athleteRoutes';
 import activityRoutes from './http/routes/activityRoutes';
 import dashboardRoutes from './http/routes/dashboardRoutes';
 import meRoutes from './http/routes/meRoutes';
+import gearRoutes from './http/routes/gearRoutes';
 import { stravaAuthRouter, stravaActionRouter } from './http/routes/stravaRoutes';
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/me', meRoutes);
 app.use('/api/athletes', athleteRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/gear', gearRoutes);
 app.use('/api/strava', stravaActionRouter);
 
 // ─── global error handler ────────────────────────────────────────────────────

@@ -20,6 +20,7 @@ function rowToActivity(row: Record<string, unknown>): Activity {
     startDate: row.start_date as Date,
     startDateLocal: row.start_date_local as Date,
     timezone: row.timezone as string,
+    utcOffset: row.utc_offset != null ? (row.utc_offset as number) : undefined,
     distance: parseFloat(row.distance as string),
     movingTime: row.moving_time as number,
     elapsedTime: row.elapsed_time as number,
@@ -137,7 +138,7 @@ export class PgActivityRepository implements ActivityRepository {
         await client.query(
           `INSERT INTO activities (
              id, athlete_id, gear_id, name, sport_type,
-             start_date, start_date_local, timezone,
+             start_date, start_date_local, timezone, utc_offset,
              distance, moving_time, elapsed_time, total_elevation_gain,
              average_speed, max_speed, average_cadence,
              has_heartrate, average_heartrate, max_heartrate,
@@ -145,12 +146,12 @@ export class PgActivityRepository implements ActivityRepository {
              trainer, commute, device_name, description
            ) VALUES (
              $1, $2, $3, $4, $5,
-             $6, $7, $8,
-             $9, $10, $11, $12,
-             $13, $14, $15,
-             $16, $17, $18,
-             $19, $20, $21,
-             $22, $23, $24, $25
+             $6, $7, $8, $9,
+             $10, $11, $12, $13,
+             $14, $15, $16,
+             $17, $18, $19,
+             $20, $21, $22,
+             $23, $24, $25, $26
            )
            ON CONFLICT (id) DO UPDATE SET
              athlete_id = EXCLUDED.athlete_id,
@@ -160,6 +161,7 @@ export class PgActivityRepository implements ActivityRepository {
              start_date = EXCLUDED.start_date,
              start_date_local = EXCLUDED.start_date_local,
              timezone = EXCLUDED.timezone,
+             utc_offset = EXCLUDED.utc_offset,
              distance = EXCLUDED.distance,
              moving_time = EXCLUDED.moving_time,
              elapsed_time = EXCLUDED.elapsed_time,
@@ -187,6 +189,7 @@ export class PgActivityRepository implements ActivityRepository {
             a.startDate,
             a.startDateLocal,
             a.timezone,
+            a.utcOffset ?? null,
             a.distance,
             a.movingTime,
             a.elapsedTime,

@@ -151,6 +151,21 @@ export function ActivityDetailPage() {
               <MetricRow label="En cinta / rodillo" value={activity.trainer ? 'Sí' : 'No'} />
               <MetricRow label="Dispositivo" value={activity.deviceName ?? '—'} />
               <MetricRow label="Zona horaria" value={activity.timezone} />
+              <MetricRow
+                label="Offset UTC"
+                value={
+                  activity.utcOffset != null
+                    ? (() => {
+                        const totalMinutes = activity.utcOffset / 60;
+                        const sign = totalMinutes >= 0 ? '+' : '-';
+                        const absMinutes = Math.abs(totalMinutes);
+                        const h = String(Math.floor(absMinutes / 60)).padStart(2, '0');
+                        const m = String(absMinutes % 60).padStart(2, '0');
+                        return `UTC${sign}${h}:${m}`;
+                      })()
+                    : '—'
+                }
+              />
               <MetricRow label="Material (gear)" value={activity.gearId ?? '—'} />
             </Section>
 
