@@ -10,6 +10,14 @@ export interface StravaTokenResponse {
   athlete?: StravaAthletePayload;
 }
 
+export interface StravaGearSummary {
+  id: string;
+  primary: boolean;
+  name: string;
+  distance: number; // metros
+  resource_state: number;
+}
+
 export interface StravaAthletePayload {
   id: number;
   username?: string;
@@ -22,6 +30,7 @@ export interface StravaAthletePayload {
   profile?: string;
   weight?: number;
   measurement_preference?: string;
+  shoes?: StravaGearSummary[];
 }
 
 export interface StravaActivitySummary {

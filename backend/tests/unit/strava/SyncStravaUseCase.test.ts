@@ -4,6 +4,7 @@ import { StravaApiError } from '../../../src/infrastructure/strava/StravaApiClie
 import { NotFoundError, ValidationError } from '../../../src/domain/shared/DomainError';
 import { createFakeAthleteRepo } from '../../_helpers/fakeAthleteRepo';
 import { createFakeActivityRepo } from '../../_helpers/fakeActivityRepo';
+import { createFakeGearRepo } from '../../_helpers/fakeGearRepo';
 import { makeAthlete } from '../../_helpers/fixtures';
 
 function makeLinkedAthlete() {
@@ -24,6 +25,9 @@ function fakeClient(overrides: any = {}) {
       lastname: 'Runner',
       profile_medium: 'http://img',
       weight: 60,
+      shoes: [
+        { id: 'g1', name: 'Nike Vaporfly', primary: true, distance: 400000, resource_state: 2 },
+      ],
     }),
     listActivities: vi.fn().mockResolvedValue([]),
     ...overrides,
@@ -51,9 +55,10 @@ describe('SyncStravaUseCase', () => {
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
-  it('happy path: actualiza perfil, upserta actividades y registra sync ok', async () => {
+  it('happy path: actualiza perfil, upserta gear y actividades, registra sync ok', async () => {
     const aRepo = createFakeAthleteRepo();
     const actRepo = createFakeActivityRepo();
+    const gearRepo = createFakeGearRepo();
     (aRepo.findById as any).mockResolvedValue(makeLinkedAthlete());
     (actRepo.upsertMany as any).mockResolvedValue({ created: 2, updated: 1 });
 
@@ -79,13 +84,42 @@ describe('SyncStravaUseCase', () => {
       ]),
     });
 
-    const result = await new SyncStravaUseCase(aRepo, actRepo, client).execute({ athleteId: 1 });
+    const result = await new SyncStravaUseCase(aRepo, actRepo, client, gearRepo).execute({
+      athleteId: 1,
+    });
 
     expect(result.activitiesSynced).toBe(3);
     expect(result.created).toBe(2);
     expect(result.updated).toBe(1);
+    expect(result.gearSynced).toBe(1);
     expect(aRepo.updateStravaProfile).toHaveBeenCalledTimes(1);
     expect(aRepo.recordSyncSuccess).toHaveBeenCalledTimes(1);
+    expect(gearRepo.upsertManyForAthlete).toHaveBeenCalledWith(
+      1,
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'g1', name: 'Nike Vaporfly', isPrimary: true }),
+      ])
+    );
+  });
+
+  it('upserta gear ANTES de las actividades para que la FK no se anule', async () => {
+    const aRepo = createFakeAthleteRepo();
+    const actRepo = createFakeActivityRepo();
+    const gearRepo = createFakeGearRepo();
+    (aRepo.findById as any).mockResolvedValue(makeLinkedAthlete());
+
+    const callOrder: string[] = [];
+    (gearRepo.upsertManyForAthlete as any).mockImplementation(async () => {
+      callOrder.push('gear');
+    });
+    (actRepo.upsertMany as any).mockImplementation(async () => {
+      callOrder.push('activities');
+      return { created: 0, updated: 0 };
+    });
+
+    await new SyncStravaUseCase(aRepo, actRepo, fakeClient(), gearRepo).execute({ athleteId: 1 });
+
+    expect(callOrder).toEqual(['gear', 'activities']);
   });
 
   it('si Strava devuelve UNAUTHORIZED desvincula y lanza ValidationError', async () => {
@@ -99,7 +133,7 @@ describe('SyncStravaUseCase', () => {
     });
 
     await expect(
-      new SyncStravaUseCase(aRepo, actRepo, client).execute({ athleteId: 1 })
+      new SyncStravaUseCase(aRepo, actRepo, client, createFakeGearRepo()).execute({ athleteId: 1 })
     ).rejects.toBeInstanceOf(ValidationError);
     expect(aRepo.unlinkStravaAccount).toHaveBeenCalledTimes(1);
   });
@@ -113,7 +147,7 @@ describe('SyncStravaUseCase', () => {
     });
 
     await expect(
-      new SyncStravaUseCase(aRepo, actRepo, client).execute({ athleteId: 1 })
+      new SyncStravaUseCase(aRepo, actRepo, client, createFakeGearRepo()).execute({ athleteId: 1 })
     ).rejects.toThrow('boom');
     expect(aRepo.recordSyncError).toHaveBeenCalledTimes(1);
   });

@@ -9,6 +9,7 @@ export interface ActivityDetail {
   startDate: string;
   startDateLocal: string;
   timezone: string;
+  utcOffset?: number;
   distance: number;
   movingTime: number;
   elapsedTime: number;
@@ -49,6 +50,7 @@ export interface CreateActivityInput {
   trainer?: boolean;
   commute?: boolean;
   deviceName?: string;
+  gearId?: string;
 }
 
 export const activitiesApi = {

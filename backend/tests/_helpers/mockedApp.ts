@@ -32,17 +32,25 @@ export const mockRepos = vi.hoisted(() => {
     deleteByAthleteId: vi.fn(),
     upsertMany: vi.fn(),
   };
+  const gear = {
+    findByAthleteId: vi.fn(),
+    findAll: vi.fn(),
+    upsertManyForAthlete: vi.fn().mockResolvedValue(undefined),
+    getGearDistanceStats: vi.fn(),
+    getGlobalGearDistanceStats: vi.fn(),
+  };
   const strava = {
     exchangeCode: vi.fn(),
     refreshAccessToken: vi.fn(),
     getAthlete: vi.fn(),
     listActivities: vi.fn(),
   };
-  return { athlete, activity, strava };
+  return { athlete, activity, gear, strava };
 });
 
 export function resetAllMocks() {
   Object.values(mockRepos.athlete).forEach((fn) => (fn as any).mockReset());
   Object.values(mockRepos.activity).forEach((fn) => (fn as any).mockReset());
+  Object.values(mockRepos.gear).forEach((fn) => (fn as any).mockReset());
   Object.values(mockRepos.strava).forEach((fn) => (fn as any).mockReset());
 }

@@ -1,9 +1,10 @@
-import { useState, useRef, type FormEvent } from 'react';
+import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, Pencil, FileCheck, FileText, X } from 'lucide-react';
 import { AppShell } from '../templates/AppShell';
 import { PageHeader } from '../atoms/PageHeader';
 import { activitiesApi, type CreateActivityInput } from '../../infrastructure/api/activitiesApi';
+import { gearApi, type GearStat } from '../../infrastructure/api/gearApi';
 import { parseGpx } from '../../lib/gpxParser';
 
 type Mode = 'manual' | 'gpx';
@@ -68,7 +69,16 @@ export function AddActivityPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [gpxFileName, setGpxFileName] = useState<string | null>(null);
+  const [gearList, setGearList] = useState<GearStat[]>([]);
+  const [selectedGearId, setSelectedGearId] = useState<string>('');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    gearApi
+      .stats()
+      .then(setGearList)
+      .catch(() => {});
+  }, []);
 
   function set<K extends keyof ManualForm>(key: K, value: ManualForm[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -173,6 +183,7 @@ export function AddActivityPage() {
     if (form.deviceName.trim()) payload.deviceName = form.deviceName.trim();
     if (form.trainer) payload.trainer = true;
     if (form.description.trim()) payload.description = form.description.trim();
+    if (selectedGearId) payload.gearId = selectedGearId;
 
     setSubmitting(true);
     try {
@@ -426,6 +437,24 @@ export function AddActivityPage() {
                   className="form-input"
                 />
               </Field>
+              {gearList.length > 0 && (
+                <Field label="Zapatillas">
+                  <select
+                    value={selectedGearId}
+                    onChange={(e) => setSelectedGearId(e.target.value)}
+                    className="form-input"
+                  >
+                    <option value="">Sin asignar</option>
+                    {gearList.map((g) => (
+                      <option key={g.gearId} value={g.gearId}>
+                        {g.name}
+                        {g.brand ? ` (${g.brand})` : ''}
+                        {g.isPrimary ? ' ★' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
               <Field label="Cinta de correr">
                 <label className="mt-2 flex items-center gap-2 text-sm text-slate-700">
                   <input

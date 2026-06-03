@@ -15,7 +15,9 @@ export interface CreateAthleteFromStravaInput {
   lastname: string;
   username: string;
   profileMediumUrl?: string;
+  profileUrl?: string;
   weight?: number;
+  measurementPreference?: string;
   scope: string;
   accessToken: string;
   refreshToken: string;
@@ -33,7 +35,9 @@ export interface UpdateStravaProfileInput {
   firstname?: string;
   lastname?: string;
   profileMediumUrl?: string;
+  profileUrl?: string;
   weight?: number;
+  measurementPreference?: string;
   lastStravaSyncAt?: Date;
 }
 
@@ -42,6 +46,9 @@ export interface UpdateProfileInput {
   lastname?: string;
   username?: string;
   email?: string;
+  maxHeartrate?: number;
+  restingHeartrate?: number;
+  measurementPreference?: string;
 }
 
 export interface RecordSyncSuccessInput {

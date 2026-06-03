@@ -24,6 +24,9 @@ const updateProfileSchema = z
       .regex(/^[a-zA-Z0-9_]+$/, 'Solo se permiten letras, números y guion bajo')
       .optional(),
     email: z.string().trim().toLowerCase().email('Email inválido').optional(),
+    maxHeartrate: z.number().int().positive().max(250).optional(),
+    restingHeartrate: z.number().int().positive().max(150).optional(),
+    measurementPreference: z.enum(['meters', 'feet']).optional(),
   })
   .refine((data) => Object.values(data).some((v) => v !== undefined), {
     message: 'Debes enviar al menos un campo a modificar',
