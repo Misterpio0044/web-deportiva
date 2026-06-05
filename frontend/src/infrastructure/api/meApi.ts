@@ -1,12 +1,6 @@
 import apiClient from './client';
 import type { AuthUser } from './authApi';
 
-export interface MeProfile extends AuthUser {
-  username: string;
-  hasPassword: boolean;
-  stravaConnected: boolean;
-}
-
 interface ApiMeResponse {
   user: {
     id: number;
