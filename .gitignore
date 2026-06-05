@@ -17,6 +17,9 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Python
+.venv/
+
 # IDE
 .vscode/settings.json
 .idea/
