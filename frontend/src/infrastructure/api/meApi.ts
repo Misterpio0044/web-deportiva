@@ -10,6 +10,7 @@ interface ApiMeResponse {
     email: string | null;
     role: 'admin' | 'user';
     stravaId?: number;
+    maxHeartrate?: number;
   };
 }
 
@@ -24,8 +25,6 @@ export interface UpdateProfilePayload {
   username?: string;
   email?: string;
   maxHeartrate?: number;
-  restingHeartrate?: number;
-  measurementPreference?: 'meters' | 'feet';
 }
 
 export interface ChangePasswordPayload {
@@ -44,12 +43,18 @@ function toAuthUser(u: ApiMeResponse['user']): AuthUser {
 }
 
 export const meApi = {
-  get: async (): Promise<{ user: AuthUser; username: string; stravaId?: number }> => {
+  get: async (): Promise<{
+    user: AuthUser;
+    username: string;
+    stravaId?: number;
+    maxHeartrate?: number;
+  }> => {
     const { data } = await apiClient.get<ApiMeResponse>('/me');
     return {
       user: toAuthUser(data.user),
       username: data.user.username,
       stravaId: data.user.stravaId,
+      maxHeartrate: data.user.maxHeartrate,
     };
   },
 

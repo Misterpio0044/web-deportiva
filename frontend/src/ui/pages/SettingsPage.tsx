@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
+// Valor usado por defecto para las zonas de FC cuando el atleta no tiene uno propio.
+const DEFAULT_MAX_HEARTRATE = 190;
+
 export function SettingsPage() {
   const user = useAuthStore((s) => s.user);
   const login = useAuthStore((s) => s.login);
@@ -19,8 +22,7 @@ export function SettingsPage() {
   const [originalUsername, setOriginalUsername] = useState('');
   const [email, setEmail] = useState(user?.email ?? '');
   const [maxHeartrate, setMaxHeartrate] = useState('');
-  const [restingHeartrate, setRestingHeartrate] = useState('');
-  const [measurementPreference, setMeasurementPreference] = useState<'meters' | 'feet' | ''>('');
+  const [originalMaxHeartrate, setOriginalMaxHeartrate] = useState('');
   const [hasPasswordLocal, setHasPasswordLocal] = useState(true);
 
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -47,6 +49,9 @@ export function SettingsPage() {
         setEmail(data.user.email ?? '');
         setUsername(data.username);
         setOriginalUsername(data.username);
+        const hr = String(data.maxHeartrate ?? DEFAULT_MAX_HEARTRATE);
+        setMaxHeartrate(hr);
+        setOriginalMaxHeartrate(hr);
         // Si la cuenta tiene strava_id pero no email, asumimos solo-Strava (sin pwd)
         // El backend ya rechaza el cambio si no hay password_hash con un mensaje claro.
         setHasPasswordLocal(data.user.email !== null);
@@ -71,9 +76,8 @@ export function SettingsPage() {
     if (lastname.trim() !== (user?.lastname ?? '')) payload.lastname = lastname.trim();
     if (username.trim() !== originalUsername) payload.username = username.trim();
     if (email.trim().toLowerCase() !== (user?.email ?? '')) payload.email = email.trim();
-    if (maxHeartrate !== '') payload.maxHeartrate = Number(maxHeartrate);
-    if (restingHeartrate !== '') payload.restingHeartrate = Number(restingHeartrate);
-    if (measurementPreference !== '') payload.measurementPreference = measurementPreference;
+    if (maxHeartrate !== '' && maxHeartrate !== originalMaxHeartrate)
+      payload.maxHeartrate = Number(maxHeartrate);
 
     if (Object.keys(payload).length === 0) {
       setProfileError('No hay cambios que guardar');
@@ -86,6 +90,7 @@ export function SettingsPage() {
       login(result.token, result.user);
       setUsername(result.username);
       setOriginalUsername(result.username);
+      setOriginalMaxHeartrate(maxHeartrate);
       setProfileMsg('Perfil actualizado correctamente');
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -195,47 +200,20 @@ export function SettingsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="maxHeartrate">FC máxima (bpm)</Label>
-                  <Input
-                    id="maxHeartrate"
-                    type="number"
-                    min={1}
-                    max={250}
-                    value={maxHeartrate}
-                    onChange={(e) => setMaxHeartrate(e.target.value)}
-                    placeholder="Ej: 185"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="restingHeartrate">FC en reposo (bpm)</Label>
-                  <Input
-                    id="restingHeartrate"
-                    type="number"
-                    min={1}
-                    max={150}
-                    value={restingHeartrate}
-                    onChange={(e) => setRestingHeartrate(e.target.value)}
-                    placeholder="Ej: 55"
-                  />
-                </div>
-              </div>
-
               <div className="space-y-1.5">
-                <Label htmlFor="measurementPreference">Unidades de medida</Label>
-                <select
-                  id="measurementPreference"
-                  value={measurementPreference}
-                  onChange={(e) =>
-                    setMeasurementPreference(e.target.value as 'meters' | 'feet' | '')
-                  }
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                >
-                  <option value="">Sin cambiar</option>
-                  <option value="meters">Métrico (km, metros)</option>
-                  <option value="feet">Imperial (millas, pies)</option>
-                </select>
+                <Label htmlFor="maxHeartrate">FC máxima (bpm)</Label>
+                <Input
+                  id="maxHeartrate"
+                  type="number"
+                  min={1}
+                  max={250}
+                  value={maxHeartrate}
+                  onChange={(e) => setMaxHeartrate(e.target.value)}
+                  placeholder="Ej: 185"
+                />
+                <p className="text-xs text-slate-500">
+                  Se usa para calcular tus zonas de frecuencia cardíaca.
+                </p>
               </div>
 
               {profileError && (

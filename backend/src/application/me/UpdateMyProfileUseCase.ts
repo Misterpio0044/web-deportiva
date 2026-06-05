@@ -8,6 +8,7 @@ export interface UpdateMyProfileInput {
   lastname?: string;
   username?: string;
   email?: string;
+  maxHeartrate?: number;
 }
 
 export interface UpdateMyProfileOutput {
@@ -28,6 +29,7 @@ export class UpdateMyProfileUseCase {
       lastname: input.lastname?.trim(),
       username: input.username?.trim(),
       email: input.email?.trim().toLowerCase(),
+      maxHeartrate: input.maxHeartrate,
     };
 
     // Comprobar unicidad si cambian

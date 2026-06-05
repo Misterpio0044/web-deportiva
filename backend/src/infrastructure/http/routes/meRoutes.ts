@@ -25,8 +25,6 @@ const updateProfileSchema = z
       .optional(),
     email: z.string().trim().toLowerCase().email('Email inválido').optional(),
     maxHeartrate: z.number().int().positive().max(250).optional(),
-    restingHeartrate: z.number().int().positive().max(150).optional(),
-    measurementPreference: z.enum(['meters', 'feet']).optional(),
   })
   .refine((data) => Object.values(data).some((v) => v !== undefined), {
     message: 'Debes enviar al menos un campo a modificar',
@@ -56,22 +54,22 @@ router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) throw new UnauthorizedError();
     const body = updateProfileSchema.parse(req.body);
     const athleteRepo = new PgAthleteRepository(pool);
-    router.post('/password', async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        if (!req.user) throw new UnauthorizedError();
-        const body = changePasswordSchema.parse(req.body);
-        const athleteRepo = new PgAthleteRepository(pool);
-        const useCase = new ChangeMyPasswordUseCase(athleteRepo);
-        await useCase.execute(req.user.sub, body);
-        res.status(204).send();
-      } catch (err) {
-        next(err);
-      }
-    });
-
     const useCase = new UpdateMyProfileUseCase(athleteRepo);
     const result = await useCase.execute(req.user.sub, body);
     res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/password', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) throw new UnauthorizedError();
+    const body = changePasswordSchema.parse(req.body);
+    const athleteRepo = new PgAthleteRepository(pool);
+    const useCase = new ChangeMyPasswordUseCase(athleteRepo);
+    await useCase.execute(req.user.sub, body);
+    res.status(204).send();
   } catch (err) {
     next(err);
   }
