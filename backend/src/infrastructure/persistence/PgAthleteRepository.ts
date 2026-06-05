@@ -193,10 +193,8 @@ export class PgAthleteRepository implements AthleteRepository {
              username = COALESCE($3, username),
              email = COALESCE($4, email),
              max_heartrate = COALESCE($5, max_heartrate),
-             resting_heartrate = COALESCE($6, resting_heartrate),
-             measurement_preference = COALESCE($7, measurement_preference),
              updated_at = NOW()
-       WHERE id = $8
+       WHERE id = $6
        RETURNING *`,
       [
         input.firstname ?? null,
@@ -204,8 +202,6 @@ export class PgAthleteRepository implements AthleteRepository {
         input.username ?? null,
         input.email ?? null,
         input.maxHeartrate ?? null,
-        input.restingHeartrate ?? null,
-        input.measurementPreference ?? null,
         athleteId,
       ]
     );

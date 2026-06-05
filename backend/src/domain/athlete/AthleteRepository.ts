@@ -47,8 +47,6 @@ export interface UpdateProfileInput {
   username?: string;
   email?: string;
   maxHeartrate?: number;
-  restingHeartrate?: number;
-  measurementPreference?: string;
 }
 
 export interface RecordSyncSuccessInput {
