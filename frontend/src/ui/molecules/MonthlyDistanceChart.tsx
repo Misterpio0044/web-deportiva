@@ -62,7 +62,7 @@ export function MonthlyDistanceChart({ data }: Props) {
             tickFormatter={(v: number) => `${v} km`}
           />
           <Tooltip
-            formatter={(value: number) => [`${value} km`, 'Distancia']}
+            formatter={(value) => [`${value} km`, 'Distancia']}
             contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }}
           />
           <Area

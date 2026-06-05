@@ -30,7 +30,7 @@ export function WeeklyVolumeChart({ data }: Props) {
           <XAxis dataKey="week" tick={{ fontSize: 11, fill: '#94a3b8' }} />
           <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={(v) => `${v}km`} />
           <Tooltip
-            formatter={(value: number) => [formatKm(value * 1000), 'Distancia']}
+            formatter={(value) => [formatKm(Number(value) * 1000), 'Distancia']}
             contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }}
           />
           <Bar dataKey="km" fill="#22c55e" radius={[4, 4, 0, 0]} />
