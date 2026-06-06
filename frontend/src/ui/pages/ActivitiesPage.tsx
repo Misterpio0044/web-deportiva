@@ -1,13 +1,54 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../application/auth/useAuthStore';
-import { activitiesApi, type ActivityDetail } from '../../infrastructure/api/activitiesApi';
+import {
+  activitiesApi,
+  type ActivityDetail,
+  type ActivitySortField,
+  type SortDirection,
+} from '../../infrastructure/api/activitiesApi';
 import { athletesApi, type AthletePublic } from '../../infrastructure/api/athletesApi';
 import { AppShell } from '../templates/AppShell';
 import { PageHeader } from '../atoms/PageHeader';
 import { DashboardSkeleton } from '../atoms/LoadingSkeleton';
 import { formatDate, formatDistance, formatPace, formatTime } from '../../lib/formatters';
 import { downloadBlob } from '../../lib/downloadBlob';
+
+const PAGE_SIZE = 20;
+
+type SortableColumn = {
+  field: ActivitySortField;
+  label: string;
+};
+
+function SortableHeader({
+  field,
+  label,
+  sortBy,
+  sortDir,
+  onSort,
+}: SortableColumn & {
+  sortBy: ActivitySortField;
+  sortDir: SortDirection;
+  onSort: (field: ActivitySortField) => void;
+}) {
+  const active = sortBy === field;
+  return (
+    <th className="px-5 py-3">
+      <button
+        type="button"
+        onClick={() => onSort(field)}
+        className={`flex items-center gap-1 font-medium transition-colors hover:text-slate-600 ${
+          active ? 'text-emerald-600' : 'text-slate-400'
+        }`}
+        aria-label={`Ordenar por ${label}`}
+      >
+        {label}
+        <span className="text-[10px]">{active ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}</span>
+      </button>
+    </th>
+  );
+}
 
 export function ActivitiesPage() {
   const user = useAuthStore((s) => s.user);
@@ -20,6 +61,16 @@ export function ActivitiesPage() {
   const [selectedAthleteId, setSelectedAthleteId] = useState<number | 'global' | undefined>(
     isAdmin ? (user?.id ?? undefined) : undefined
   );
+
+  // Paginación, ordenación, búsqueda y filtros
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [sortBy, setSortBy] = useState<ActivitySortField>('date');
+  const [sortDir, setSortDir] = useState<SortDirection>('desc');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   // Estado del modo selección/exportación
   const [selectionMode, setSelectionMode] = useState(false);
@@ -37,15 +88,41 @@ export function ActivitiesPage() {
     }
   }, [isAdmin]);
 
+  // Debounce de la búsqueda por nombre (300 ms)
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setSearch(searchInput.trim());
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
+
+  // Al cambiar filtros/orden/búsqueda/atleta, volvemos a la primera página.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPage(1);
+  }, [selectedAthleteId, sortBy, sortDir, search, dateFrom, dateTo]);
+
   useEffect(() => {
     let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError('');
     activitiesApi
-      .list(selectedAthleteId === 'global' ? undefined : selectedAthleteId)
-      .then((a) => {
-        if (!cancelled) setActivities(a);
+      .list({
+        athleteId: selectedAthleteId === 'global' ? undefined : selectedAthleteId,
+        page,
+        limit: PAGE_SIZE,
+        sortBy,
+        sortDir,
+        search: search || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+      })
+      .then((res) => {
+        if (!cancelled) {
+          setActivities(res.activities);
+          setTotal(res.total);
+        }
       })
       .catch(() => {
         if (!cancelled) setError('No se pudieron cargar las actividades.');
@@ -56,21 +133,14 @@ export function ActivitiesPage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedAthleteId]);
+  }, [selectedAthleteId, page, sortBy, sortDir, search, dateFrom, dateTo]);
 
-  // Al cambiar el conjunto visible (cambio de atleta), limpia selecciones obsoletas
+  // Al cambiar el contexto de filtrado (no la página ni el orden), limpia la selección
+  // para no exportar actividades que ya no coinciden con los filtros activos.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelectedIds((prev) => {
-      if (prev.size === 0) return prev;
-      const visible = new Set(activities.map((a) => a.id));
-      const next = new Set<number>();
-      prev.forEach((id) => {
-        if (visible.has(id)) next.add(id);
-      });
-      return next.size === prev.size ? prev : next;
-    });
-  }, [activities]);
+    setSelectedIds(new Set());
+  }, [selectedAthleteId, search, dateFrom, dateTo]);
 
   // Estado indeterminate del checkbox maestro
   const allSelected = activities.length > 0 && selectedIds.size === activities.length;
@@ -131,6 +201,27 @@ export function ActivitiesPage() {
   };
 
   const colCount = useMemo(() => (selectionMode ? 9 : 8), [selectionMode]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const hasActiveFilters = Boolean(searchInput || dateFrom || dateTo);
+  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(page * PAGE_SIZE, total);
+
+  const handleSort = (field: ActivitySortField) => {
+    if (field === sortBy) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(field);
+      setSortDir(field === 'name' ? 'asc' : 'desc');
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchInput('');
+    setSearch('');
+    setDateFrom('');
+    setDateTo('');
+  };
 
   return (
     <AppShell>
@@ -221,6 +312,56 @@ export function ActivitiesPage() {
           </div>
         )}
 
+        {/* Barra de filtros: búsqueda, deporte y rango de fechas */}
+        <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="search" className="text-xs font-medium text-slate-500">
+              Buscar por nombre
+            </label>
+            <input
+              id="search"
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Ej. carrera matutina…"
+              className="w-56 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="dateFrom" className="text-xs font-medium text-slate-500">
+              Desde
+            </label>
+            <input
+              id="dateFrom"
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="dateTo" className="text-xs font-medium text-slate-500">
+              Hasta
+            </label>
+            <input
+              id="dateTo"
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
+            >
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+
         {loading && <DashboardSkeleton />}
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">
@@ -245,13 +386,49 @@ export function ActivitiesPage() {
                         />
                       </th>
                     )}
-                    <th className="px-5 py-3">Nombre</th>
+                    <SortableHeader
+                      field="name"
+                      label="Nombre"
+                      sortBy={sortBy}
+                      sortDir={sortDir}
+                      onSort={handleSort}
+                    />
                     <th className="px-5 py-3">Deporte</th>
-                    <th className="px-5 py-3">Fecha</th>
-                    <th className="px-5 py-3">Distancia</th>
-                    <th className="px-5 py-3">Tiempo</th>
-                    <th className="px-5 py-3">Ritmo</th>
-                    <th className="px-5 py-3">FC media</th>
+                    <SortableHeader
+                      field="date"
+                      label="Fecha"
+                      sortBy={sortBy}
+                      sortDir={sortDir}
+                      onSort={handleSort}
+                    />
+                    <SortableHeader
+                      field="distance"
+                      label="Distancia"
+                      sortBy={sortBy}
+                      sortDir={sortDir}
+                      onSort={handleSort}
+                    />
+                    <SortableHeader
+                      field="time"
+                      label="Tiempo"
+                      sortBy={sortBy}
+                      sortDir={sortDir}
+                      onSort={handleSort}
+                    />
+                    <SortableHeader
+                      field="speed"
+                      label="Ritmo"
+                      sortBy={sortBy}
+                      sortDir={sortDir}
+                      onSort={handleSort}
+                    />
+                    <SortableHeader
+                      field="hr"
+                      label="FC media"
+                      sortBy={sortBy}
+                      sortDir={sortDir}
+                      onSort={handleSort}
+                    />
                     <th className="px-5 py-3">Desnivel</th>
                   </tr>
                 </thead>
@@ -302,13 +479,44 @@ export function ActivitiesPage() {
                   {activities.length === 0 && (
                     <tr>
                       <td colSpan={colCount} className="px-5 py-8 text-center text-slate-400">
-                        Sin actividades registradas
+                        {hasActiveFilters
+                          ? 'No hay actividades que coincidan con los filtros'
+                          : 'Sin actividades registradas'}
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
+
+            {total > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 text-sm text-slate-500">
+                <span>
+                  Mostrando {rangeStart}–{rangeEnd} de {total}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                    className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Anterior
+                  </button>
+                  <span className="text-slate-600">
+                    Página {page} de {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                    className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

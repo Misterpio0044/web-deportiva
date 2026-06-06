@@ -151,4 +151,104 @@ describe('SyncStravaUseCase', () => {
     ).rejects.toThrow('boom');
     expect(aRepo.recordSyncError).toHaveBeenCalledTimes(1);
   });
+
+  it('mapea las coordenadas de inicio/fin desde start_latlng/end_latlng', async () => {
+    const aRepo = createFakeAthleteRepo();
+    const actRepo = createFakeActivityRepo();
+    (aRepo.findById as any).mockResolvedValue(makeLinkedAthlete());
+    (actRepo.upsertMany as any).mockResolvedValue({ created: 1, updated: 0 });
+
+    const client = fakeClient({
+      getAthlete: vi.fn().mockResolvedValue({ id: 999, shoes: [] }),
+      listActivities: vi.fn().mockResolvedValue([
+        {
+          id: 1,
+          name: 'A',
+          type: 'Run',
+          sport_type: 'Run',
+          start_date: '2024-01-01T00:00:00Z',
+          start_date_local: '2024-01-01T00:00:00Z',
+          timezone: 'UTC',
+          utc_offset: 0,
+          distance: 5000,
+          moving_time: 1500,
+          elapsed_time: 1500,
+          total_elevation_gain: 50,
+          has_heartrate: false,
+          trainer: false,
+          commute: false,
+          start_latlng: [40.4, -3.6],
+          end_latlng: [40.42, -3.62],
+        },
+      ]),
+    });
+
+    await new SyncStravaUseCase(aRepo, actRepo, client, createFakeGearRepo()).execute({
+      athleteId: 1,
+    });
+
+    const mapped = (actRepo.upsertMany as any).mock.calls[0][0];
+    expect(mapped[0]).toMatchObject({
+      startLatitude: 40.4,
+      startLongitude: -3.6,
+      endLatitude: 40.42,
+      endLongitude: -3.62,
+    });
+  });
+
+  it('rellena los streams GPS de las actividades que faltan (tolerante a fallos)', async () => {
+    const aRepo = createFakeAthleteRepo();
+    const actRepo = createFakeActivityRepo();
+    (aRepo.findById as any).mockResolvedValue(makeLinkedAthlete());
+    (actRepo.upsertMany as any).mockResolvedValue({ created: 0, updated: 0 });
+    (actRepo.findActivityIdsMissingStreams as any).mockResolvedValue([10, 11]);
+
+    const streams = { fetchedAt: 'x', hasGps: true, latlng: [[1, 1]] };
+    const getActivityStreams = vi
+      .fn()
+      .mockResolvedValueOnce(streams)
+      .mockRejectedValueOnce(new Error('falló uno'));
+
+    const client = fakeClient({
+      getAthlete: vi.fn().mockResolvedValue({ id: 999, shoes: [] }),
+      getActivityStreams,
+    });
+
+    await new SyncStravaUseCase(aRepo, actRepo, client, createFakeGearRepo()).execute({
+      athleteId: 1,
+    });
+
+    expect(actRepo.findActivityIdsMissingStreams).toHaveBeenCalledWith(1, 50);
+    expect(getActivityStreams).toHaveBeenCalledTimes(2);
+    expect(actRepo.saveActivityStreams).toHaveBeenCalledTimes(1);
+    expect(actRepo.saveActivityStreams).toHaveBeenCalledWith(10, streams);
+    // El sync debe completarse a pesar del fallo en la segunda actividad.
+    expect(aRepo.recordSyncSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('detiene el backfill de streams si Strava devuelve rate limit', async () => {
+    const aRepo = createFakeAthleteRepo();
+    const actRepo = createFakeActivityRepo();
+    (aRepo.findById as any).mockResolvedValue(makeLinkedAthlete());
+    (actRepo.upsertMany as any).mockResolvedValue({ created: 0, updated: 0 });
+    (actRepo.findActivityIdsMissingStreams as any).mockResolvedValue([10, 11, 12]);
+
+    const getActivityStreams = vi
+      .fn()
+      .mockRejectedValue(new StravaApiError('Rate limit', 'STRAVA_RATE_LIMIT', 429));
+
+    const client = fakeClient({
+      getAthlete: vi.fn().mockResolvedValue({ id: 999, shoes: [] }),
+      getActivityStreams,
+    });
+
+    await new SyncStravaUseCase(aRepo, actRepo, client, createFakeGearRepo()).execute({
+      athleteId: 1,
+    });
+
+    // Tras el primer 429 se interrumpe el bucle.
+    expect(getActivityStreams).toHaveBeenCalledTimes(1);
+    expect(actRepo.saveActivityStreams).not.toHaveBeenCalled();
+    expect(aRepo.recordSyncSuccess).toHaveBeenCalledTimes(1);
+  });
 });

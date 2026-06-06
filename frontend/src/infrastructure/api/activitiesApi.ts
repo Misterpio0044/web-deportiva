@@ -30,6 +30,28 @@ export interface ActivityDetail {
   createdAt: string;
 }
 
+export type ActivitySortField = 'date' | 'name' | 'distance' | 'time' | 'speed' | 'hr';
+export type SortDirection = 'asc' | 'desc';
+
+export interface ActivityListParams {
+  athleteId?: number;
+  page?: number;
+  limit?: number;
+  sortBy?: ActivitySortField;
+  sortDir?: SortDirection;
+  search?: string;
+  sportType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface ActivityListResponse {
+  activities: ActivityDetail[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export interface CreateActivityInput {
   name: string;
   sportType: string;
@@ -54,11 +76,20 @@ export interface CreateActivityInput {
 }
 
 export const activitiesApi = {
-  list: (athleteId?: number) => {
-    const params = athleteId ? { athleteId } : {};
+  list: (params: ActivityListParams = {}) => {
+    const queryParams: Record<string, string | number> = {};
+    if (params.athleteId != null) queryParams.athleteId = params.athleteId;
+    if (params.page != null) queryParams.page = params.page;
+    if (params.limit != null) queryParams.limit = params.limit;
+    if (params.sortBy) queryParams.sortBy = params.sortBy;
+    if (params.sortDir) queryParams.sortDir = params.sortDir;
+    if (params.search) queryParams.search = params.search;
+    if (params.sportType) queryParams.sportType = params.sportType;
+    if (params.dateFrom) queryParams.dateFrom = params.dateFrom;
+    if (params.dateTo) queryParams.dateTo = params.dateTo;
     return apiClient
-      .get<{ activities: ActivityDetail[] }>('/activities', { params })
-      .then((r) => r.data.activities);
+      .get<ActivityListResponse>('/activities', { params: queryParams })
+      .then((r) => r.data);
   },
   get: (id: number) => {
     return apiClient

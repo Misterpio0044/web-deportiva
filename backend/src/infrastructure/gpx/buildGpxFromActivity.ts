@@ -1,36 +1,26 @@
 import { Activity } from '../../domain/activity/Activity';
+import { ActivityStreams } from '../../domain/activity/ActivityStreams';
 
 /**
- * Construye un archivo GPX 1.1 a partir de los datos agregados de una actividad.
+ * Construye un archivo GPX 1.1 a partir de una actividad y, si está disponible,
+ * su traza GPS completa (streams de Strava).
  *
- * Limitación actual: solo persistimos el punto de inicio y de fin de cada
- * actividad (no la traza completa). El GPX generado contiene, como máximo,
- * dos `<trkpt>` (inicio y fin). Si no hay coordenadas conocidas, se emite
- * un GPX bien formado solo con metadatos.
+ * - Con streams GPS: emite un `<trkpt>` por punto con elevación (`<ele>`), tiempo
+ *   absoluto (`<time>`) y, cuando existen, FC y cadencia en `<extensions>`
+ *   (formato Garmin TrackPointExtension). Este GPX es reimportable en Strava.
+ * - Sin streams: cae al comportamiento previo, usando como mucho el punto de
+ *   inicio y de fin. Si no hay coordenadas, emite un GPX solo con metadatos.
  */
-export function buildGpxFromActivity(activity: Activity): string {
+export function buildGpxFromActivity(activity: Activity, streams?: ActivityStreams | null): string {
   const start = isoUtc(activity.startDate);
-  const end = isoUtc(new Date(activity.startDate.getTime() + activity.elapsedTime * 1000));
 
   const desc = buildDescription(activity);
   const name = escapeXml(activity.name || 'Actividad');
 
-  const hasStart =
-    typeof activity.startLatitude === 'number' && typeof activity.startLongitude === 'number';
-  const hasEnd =
-    typeof activity.endLatitude === 'number' && typeof activity.endLongitude === 'number';
-
-  const trkpts: string[] = [];
-  if (hasStart) {
-    trkpts.push(
-      `      <trkpt lat="${activity.startLatitude}" lon="${activity.startLongitude}"><time>${start}</time></trkpt>`
-    );
-  }
-  if (hasEnd) {
-    trkpts.push(
-      `      <trkpt lat="${activity.endLatitude}" lon="${activity.endLongitude}"><time>${end}</time></trkpt>`
-    );
-  }
+  const trkpts =
+    streams && streams.hasGps && streams.latlng && streams.latlng.length > 0
+      ? buildTrackpointsFromStreams(activity, streams)
+      : buildTrackpointsFromEndpoints(activity);
 
   const trkBlock =
     trkpts.length > 0
@@ -55,6 +45,78 @@ ${trkpts.join('\n')}
 ${trkBlock}
 </gpx>
 `;
+}
+
+/** Trackpoints reconstruidos desde la traza GPS completa. */
+function buildTrackpointsFromStreams(activity: Activity, streams: ActivityStreams): string[] {
+  const latlng = streams.latlng ?? [];
+  const startMs = activity.startDate.getTime();
+  const pts: string[] = [];
+
+  for (let i = 0; i < latlng.length; i++) {
+    const [lat, lon] = latlng[i];
+    if (typeof lat !== 'number' || typeof lon !== 'number') continue;
+
+    const parts: string[] = [`      <trkpt lat="${lat}" lon="${lon}">`];
+
+    const ele = streams.altitude?.[i];
+    if (typeof ele === 'number') {
+      parts.push(`        <ele>${round(ele, 1)}</ele>`);
+    }
+
+    const offset = streams.time?.[i];
+    if (typeof offset === 'number') {
+      parts.push(`        <time>${isoUtc(new Date(startMs + offset * 1000))}</time>`);
+    }
+
+    const hr = streams.heartrate?.[i];
+    const cad = streams.cadence?.[i];
+    if (typeof hr === 'number' || typeof cad === 'number') {
+      parts.push('        <extensions>');
+      parts.push('          <gpxtpx:TrackPointExtension>');
+      if (typeof hr === 'number') {
+        parts.push(`            <gpxtpx:hr>${Math.round(hr)}</gpxtpx:hr>`);
+      }
+      if (typeof cad === 'number') {
+        parts.push(`            <gpxtpx:cad>${Math.round(cad)}</gpxtpx:cad>`);
+      }
+      parts.push('          </gpxtpx:TrackPointExtension>');
+      parts.push('        </extensions>');
+    }
+
+    parts.push('      </trkpt>');
+    pts.push(parts.join('\n'));
+  }
+  return pts;
+}
+
+/** Trackpoints de respaldo: solo inicio y fin (datos agregados de la actividad). */
+function buildTrackpointsFromEndpoints(activity: Activity): string[] {
+  const start = isoUtc(activity.startDate);
+  const end = isoUtc(new Date(activity.startDate.getTime() + activity.elapsedTime * 1000));
+
+  const hasStart =
+    typeof activity.startLatitude === 'number' && typeof activity.startLongitude === 'number';
+  const hasEnd =
+    typeof activity.endLatitude === 'number' && typeof activity.endLongitude === 'number';
+
+  const trkpts: string[] = [];
+  if (hasStart) {
+    trkpts.push(
+      `      <trkpt lat="${activity.startLatitude}" lon="${activity.startLongitude}"><time>${start}</time></trkpt>`
+    );
+  }
+  if (hasEnd) {
+    trkpts.push(
+      `      <trkpt lat="${activity.endLatitude}" lon="${activity.endLongitude}"><time>${end}</time></trkpt>`
+    );
+  }
+  return trkpts;
+}
+
+function round(n: number, decimals: number): number {
+  const f = 10 ** decimals;
+  return Math.round(n * f) / f;
 }
 
 /** Nombre de fichero seguro: `YYYY-MM-DD_slug-del-nombre.gpx`. */

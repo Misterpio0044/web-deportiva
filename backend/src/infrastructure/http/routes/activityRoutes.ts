@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { createRequire } from 'node:module';
 import { pool } from '../../database/pool';
 import { PgActivityRepository } from '../../persistence/PgActivityRepository';
+import { PgAthleteRepository } from '../../persistence/PgAthleteRepository';
+import { StravaApiClient } from '../../strava/StravaApiClient';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { ForbiddenError } from '../../../domain/shared/DomainError';
 import { CreateActivityUseCase } from '../../../application/activity/CreateActivityUseCase';
@@ -42,6 +44,18 @@ const createActivitySchema = z.object({
   gearId: z.string().max(50).optional(),
 });
 
+const listActivitiesQuerySchema = z.object({
+  athleteId: z.coerce.number().int().positive().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  sortBy: z.enum(['date', 'name', 'distance', 'time', 'speed', 'hr']).default('date'),
+  sortDir: z.enum(['asc', 'desc']).default('desc'),
+  search: z.string().trim().max(200).optional(),
+  sportType: z.string().trim().max(50).optional(),
+  dateFrom: z.string().trim().min(1).optional(),
+  dateTo: z.string().trim().min(1).optional(),
+});
+
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const parsed = createActivitySchema.parse(req.body);
@@ -60,26 +74,30 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const activityRepo = new PgActivityRepository(pool);
-    const rawAthleteId = Array.isArray(req.query.athleteId)
-      ? String(req.query.athleteId[0])
-      : (req.query.athleteId as string | undefined);
-    const requestedAthleteId = rawAthleteId ? parseInt(rawAthleteId, 10) : null;
+    const query = listActivitiesQuerySchema.parse(req.query);
 
+    // Autorización: los usuarios normales solo ven sus propias actividades.
+    // Los admin pueden pedir un atleta concreto o el global (athleteId nulo).
+    let athleteId: number | null;
     if (req.user!.role === 'user') {
-      // Users can only see their own activities
-      const activities = await activityRepo.findByAthleteId(req.user!.sub, 100);
-      res.status(200).json({ activities });
-      return;
+      athleteId = req.user!.sub;
+    } else {
+      athleteId = query.athleteId ?? null;
     }
 
-    // Admin: can query any athlete or all
-    if (requestedAthleteId) {
-      const activities = await activityRepo.findByAthleteId(requestedAthleteId, 100);
-      res.status(200).json({ activities });
-    } else {
-      const activities = await activityRepo.findAll(100);
-      res.status(200).json({ activities });
-    }
+    const { items, total } = await activityRepo.searchActivities({
+      athleteId,
+      page: query.page,
+      limit: query.limit,
+      sortBy: query.sortBy,
+      sortDir: query.sortDir,
+      search: query.search,
+      sportType: query.sportType,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
+    });
+
+    res.status(200).json({ activities: items, total, page: query.page, limit: query.limit });
   } catch (err) {
     next(err);
   }
@@ -112,7 +130,9 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 router.get('/:id/gpx', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const activityRepo = new PgActivityRepository(pool);
-    const useCase = new ExportActivityGpxUseCase(activityRepo);
+    const athleteRepo = new PgAthleteRepository(pool);
+    const stravaClient = new StravaApiClient();
+    const useCase = new ExportActivityGpxUseCase(activityRepo, athleteRepo, stravaClient);
     const activityId = parseInt(String(req.params.id), 10);
     if (Number.isNaN(activityId)) {
       res.status(400).json({ message: 'Id de actividad inválido', code: 'BAD_REQUEST' });
