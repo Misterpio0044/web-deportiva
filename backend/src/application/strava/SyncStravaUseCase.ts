@@ -17,6 +17,11 @@ export interface SyncStravaInput {
   perPage?: number;
 }
 
+// Máximo de actividades cuyos streams GPS se descargan por sincronización, para
+// respetar los límites de cuota de Strava (~100 req/15min). El resto se rellena
+// en sincronizaciones posteriores o de forma perezosa al exportar.
+const STREAMS_PER_SYNC = 50;
+
 export interface SyncStravaOutput {
   activitiesSynced: number;
   created: number;
@@ -54,6 +59,10 @@ function mapActivity(athleteId: number, raw: StravaActivitySummary): Activity {
     commute: Boolean(raw.commute),
     deviceName: raw.device_name,
     description: raw.description,
+    startLatitude: raw.start_latlng?.[0],
+    startLongitude: raw.start_latlng?.[1],
+    endLatitude: raw.end_latlng?.[0],
+    endLongitude: raw.end_latlng?.[1],
     createdAt: new Date(),
   };
 }
@@ -117,6 +126,10 @@ export class SyncStravaUseCase {
       const mapped = raws.map((r) => mapActivity(athlete.id, r));
       const { created, updated } = await this.activityRepo.upsertMany(mapped);
 
+      // 4. Backfill de la traza GPS (streams) por tandas, respetando la cuota.
+      //    Tolerante a fallos: un error aquí no debe invalidar el sync.
+      await this.backfillStreams(athlete.id, accessToken);
+
       await this.athleteRepo.recordSyncSuccess(athlete.id, {
         at: now,
         created,
@@ -142,6 +155,37 @@ export class SyncStravaUseCase {
       const message = err instanceof Error ? err.message : 'Error desconocido al sincronizar';
       await this.athleteRepo.recordSyncError(athlete.id, { at: now, message });
       throw err;
+    }
+  }
+
+  /**
+   * Descarga y cachea los streams GPS de hasta STREAMS_PER_SYNC actividades del
+   * atleta que aún no los tengan (y que tengan GPS). Se ejecuta de forma secuencial
+   * y tolerante a errores: si Strava devuelve rate limit (429) u otro fallo, se
+   * detiene silenciosamente y se reintentará en el próximo sync.
+   */
+  private async backfillStreams(athleteId: number, accessToken: string): Promise<void> {
+    let ids: number[];
+    try {
+      ids = await this.activityRepo.findActivityIdsMissingStreams(athleteId, STREAMS_PER_SYNC);
+    } catch {
+      return;
+    }
+
+    for (const id of ids) {
+      try {
+        const streams = await this.stravaClient.getActivityStreams(accessToken, id);
+        if (streams) {
+          await this.activityRepo.saveActivityStreams(id, streams);
+        }
+      } catch (err) {
+        // Rate limit u otro error transitorio: paramos esta tanda.
+        if (err instanceof StravaApiError && err.code === 'STRAVA_RATE_LIMIT') {
+          break;
+        }
+        // Para otros errores puntuales, continuamos con el resto.
+        console.error(`[Strava] No se pudieron obtener streams de la actividad ${id}:`, err);
+      }
     }
   }
 }

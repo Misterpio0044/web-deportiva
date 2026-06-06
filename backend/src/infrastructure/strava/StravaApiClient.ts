@@ -1,4 +1,5 @@
 import { DomainError } from '../../domain/shared/DomainError';
+import { ActivityStreams } from '../../domain/activity/ActivityStreams';
 import { getStravaConfig } from './stravaConfig';
 
 export interface StravaTokenResponse {
@@ -62,6 +63,39 @@ export interface StravaActivitySummary {
   gear_id?: string | null;
   start_latlng?: [number, number] | null;
   end_latlng?: [number, number] | null;
+}
+
+/**
+ * Respuesta cruda de GET /activities/{id}/streams con `key_by_type=true`.
+ * Cada clave presente trae sus datos alineados por índice con el resto.
+ */
+export interface StravaStreamSet {
+  time?: { data: number[] };
+  latlng?: { data: [number, number][] };
+  altitude?: { data: number[] };
+  heartrate?: { data: number[] };
+  cadence?: { data: number[] };
+}
+
+/**
+ * Normaliza la respuesta de streams de Strava a nuestra forma de almacenamiento.
+ * Si no hay traza GPS (latlng vacío o ausente) marca `hasGps: false`.
+ */
+export function normalizeStravaStreams(raw: StravaStreamSet | null): ActivityStreams {
+  const fetchedAt = new Date().toISOString();
+  const latlng = raw?.latlng?.data;
+  if (!latlng || latlng.length === 0) {
+    return { fetchedAt, hasGps: false };
+  }
+  return {
+    fetchedAt,
+    hasGps: true,
+    latlng,
+    time: raw?.time?.data,
+    altitude: raw?.altitude?.data,
+    heartrate: raw?.heartrate?.data,
+    cadence: raw?.cadence?.data,
+  };
 }
 
 export class StravaApiError extends DomainError {
@@ -148,5 +182,28 @@ export class StravaApiClient {
     });
     if (!res.ok) throw await parseError(res, 'Fallo al listar actividades de Strava');
     return (await res.json()) as StravaActivitySummary[];
+  }
+
+  /**
+   * Descarga los streams de una actividad y los devuelve normalizados.
+   * Devuelve `null` si la actividad ya no existe en Strava (404). Otros errores
+   * (incluido 429 rate limit) se propagan como StravaApiError para que el
+   * llamante decida cómo tolerarlos.
+   */
+  async getActivityStreams(
+    accessToken: string,
+    activityId: number
+  ): Promise<ActivityStreams | null> {
+    const params = new URLSearchParams();
+    params.set('keys', 'time,latlng,altitude,heartrate,cadence');
+    params.set('key_by_type', 'true');
+    const res = await fetch(
+      `${this.cfg.STRAVA_API_BASE}/activities/${activityId}/streams?${params}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw await parseError(res, 'Fallo al obtener los streams de Strava');
+    const raw = (await res.json()) as StravaStreamSet;
+    return normalizeStravaStreams(raw);
   }
 }

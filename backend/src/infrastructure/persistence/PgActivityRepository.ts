@@ -12,6 +12,7 @@ import {
   ActivitySortField,
 } from '../../domain/activity/ActivityRepository';
 import { Activity } from '../../domain/activity/Activity';
+import { ActivityStreams } from '../../domain/activity/ActivityStreams';
 
 const ACTIVITY_SORT_COLUMNS: Record<ActivitySortField, string> = {
   date: 'start_date_local',
@@ -21,6 +22,19 @@ const ACTIVITY_SORT_COLUMNS: Record<ActivitySortField, string> = {
   speed: 'average_speed',
   hr: 'average_heartrate',
 };
+
+// Columnas de actividad para las consultas de lectura. Se excluye `streams_json`
+// (JSONB potencialmente grande) para no transferir la traza completa en los
+// listados; los streams se leen aparte con getActivityStreams.
+const ACTIVITY_COLUMNS = `id, athlete_id, gear_id, name, sport_type,
+  start_date, start_date_local, timezone, utc_offset,
+  distance, moving_time, elapsed_time, total_elevation_gain,
+  average_speed, max_speed, average_cadence,
+  has_heartrate, average_heartrate, max_heartrate,
+  average_temp, suffer_score, calories,
+  trainer, commute, device_name, description,
+  start_latitude, start_longitude, end_latitude, end_longitude,
+  created_at`;
 
 function rowToActivity(row: Record<string, unknown>): Activity {
   return {
@@ -71,20 +85,23 @@ export class PgActivityRepository implements ActivityRepository {
 
   async findByAthleteId(athleteId: number, limit = 100): Promise<Activity[]> {
     const { rows } = await this.pool.query(
-      `SELECT * FROM activities WHERE athlete_id = $1 ORDER BY start_date_local DESC LIMIT $2`,
+      `SELECT ${ACTIVITY_COLUMNS} FROM activities WHERE athlete_id = $1 ORDER BY start_date_local DESC LIMIT $2`,
       [athleteId, limit]
     );
     return rows.map(rowToActivity);
   }
 
   async findById(id: number): Promise<Activity | null> {
-    const { rows } = await this.pool.query('SELECT * FROM activities WHERE id = $1', [id]);
+    const { rows } = await this.pool.query(
+      `SELECT ${ACTIVITY_COLUMNS} FROM activities WHERE id = $1`,
+      [id]
+    );
     return rows[0] ? rowToActivity(rows[0]) : null;
   }
 
   async findAll(limit = 100): Promise<Activity[]> {
     const { rows } = await this.pool.query(
-      `SELECT * FROM activities ORDER BY start_date_local DESC LIMIT $1`,
+      `SELECT ${ACTIVITY_COLUMNS} FROM activities ORDER BY start_date_local DESC LIMIT $1`,
       [limit]
     );
     return rows.map(rowToActivity);
@@ -143,13 +160,47 @@ export class PgActivityRepository implements ActivityRepository {
     const limitParam = `$${values.length + 1}`;
     const offsetParam = `$${values.length + 2}`;
     const { rows } = await this.pool.query(
-      `SELECT * FROM activities ${whereClause}
+      `SELECT ${ACTIVITY_COLUMNS} FROM activities ${whereClause}
        ORDER BY ${sortColumn} ${direction} NULLS LAST, id DESC
        LIMIT ${limitParam} OFFSET ${offsetParam}`,
       [...values, limit, offset]
     );
 
     return { items: rows.map(rowToActivity), total };
+  }
+
+  async getActivityStreams(activityId: number): Promise<ActivityStreams | null> {
+    const { rows } = await this.pool.query(
+      `SELECT streams_json FROM activities WHERE id = $1`,
+      [activityId]
+    );
+    const value = rows[0]?.streams_json;
+    return value ? (value as ActivityStreams) : null;
+  }
+
+  async saveActivityStreams(activityId: number, streams: ActivityStreams): Promise<void> {
+    await this.pool.query(
+      `UPDATE activities SET streams_json = $2, updated_at = NOW() WHERE id = $1`,
+      [activityId, streams]
+    );
+  }
+
+  /**
+   * Ids de actividades del atleta que aún no tienen streams cacheados, priorizando
+   * las más recientes. Solo aquellas con coordenadas de inicio (es decir, con GPS),
+   * para no malgastar peticiones en actividades indoor.
+   */
+  async findActivityIdsMissingStreams(athleteId: number, limit: number): Promise<number[]> {
+    const { rows } = await this.pool.query(
+      `SELECT id FROM activities
+       WHERE athlete_id = $1
+         AND streams_json IS NULL
+         AND start_latitude IS NOT NULL
+       ORDER BY start_date_local DESC
+       LIMIT $2`,
+      [athleteId, limit]
+    );
+    return rows.map((r) => Number(r.id));
   }
 
   async getDashboardData(athleteId: number): Promise<DashboardData> {
@@ -217,7 +268,8 @@ export class PgActivityRepository implements ActivityRepository {
              average_speed, max_speed, average_cadence,
              has_heartrate, average_heartrate, max_heartrate,
              average_temp, suffer_score, calories,
-             trainer, commute, device_name, description
+             trainer, commute, device_name, description,
+             start_latitude, start_longitude, end_latitude, end_longitude
            ) VALUES (
              $1, $2, $3, $4, $5,
              $6, $7, $8, $9,
@@ -225,7 +277,8 @@ export class PgActivityRepository implements ActivityRepository {
              $14, $15, $16,
              $17, $18, $19,
              $20, $21, $22,
-             $23, $24, $25, $26
+             $23, $24, $25, $26,
+             $27, $28, $29, $30
            )
            ON CONFLICT (id) DO UPDATE SET
              athlete_id = EXCLUDED.athlete_id,
@@ -253,6 +306,10 @@ export class PgActivityRepository implements ActivityRepository {
              commute = EXCLUDED.commute,
              device_name = EXCLUDED.device_name,
              description = EXCLUDED.description,
+             start_latitude = EXCLUDED.start_latitude,
+             start_longitude = EXCLUDED.start_longitude,
+             end_latitude = EXCLUDED.end_latitude,
+             end_longitude = EXCLUDED.end_longitude,
              updated_at = NOW()`,
           [
             a.id,
@@ -281,6 +338,10 @@ export class PgActivityRepository implements ActivityRepository {
             a.commute,
             a.deviceName ?? null,
             a.description ?? null,
+            a.startLatitude ?? null,
+            a.startLongitude ?? null,
+            a.endLatitude ?? null,
+            a.endLongitude ?? null,
           ]
         );
       }

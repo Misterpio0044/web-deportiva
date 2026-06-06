@@ -1,4 +1,5 @@
 import { Activity } from './Activity';
+import { ActivityStreams } from './ActivityStreams';
 
 export interface WeeklyVolume {
   week: string;
@@ -62,6 +63,9 @@ export interface ActivityRepository {
   findById(id: number): Promise<Activity | null>;
   findAll(limit?: number): Promise<Activity[]>;
   searchActivities(params: SearchActivitiesParams): Promise<SearchActivitiesResult>;
+  getActivityStreams(activityId: number): Promise<ActivityStreams | null>;
+  saveActivityStreams(activityId: number, streams: ActivityStreams): Promise<void>;
+  findActivityIdsMissingStreams(athleteId: number, limit: number): Promise<number[]>;
   getDashboardData(athleteId: number): Promise<DashboardData>;
   getGlobalDashboardData(): Promise<DashboardData>;
   deleteByAthleteId(athleteId: number): Promise<void>;

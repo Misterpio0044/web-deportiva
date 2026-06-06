@@ -13,6 +13,9 @@ export function createFakeActivityRepo(): ActivityRepository & {
     getGlobalDashboardData: vi.fn(),
     deleteByAthleteId: vi.fn(),
     upsertMany: vi.fn(),
+    getActivityStreams: vi.fn().mockResolvedValue(null),
+    saveActivityStreams: vi.fn().mockResolvedValue(undefined),
+    findActivityIdsMissingStreams: vi.fn().mockResolvedValue([]),
   };
   return repo as unknown as ActivityRepository & {
     [k: string]: ReturnType<typeof vi.fn> | unknown;

@@ -58,6 +58,58 @@ describe('buildGpxFromActivity', () => {
   });
 });
 
+describe('buildGpxFromActivity con streams GPS', () => {
+  const streams = {
+    fetchedAt: '2024-05-20T10:00:00Z',
+    hasGps: true,
+    time: [0, 1, 2],
+    latlng: [
+      [40.4, -3.6],
+      [40.41, -3.61],
+      [40.42, -3.62],
+    ] as [number, number][],
+    altitude: [650, 651.4, 652],
+    heartrate: [120, 130, 140],
+    cadence: [80, 82, 84],
+  };
+
+  it('emite un trkpt por punto con ele, time, hr y cad', () => {
+    const xml = buildGpxFromActivity(
+      makeActivity({ startLatitude: 40.4, startLongitude: -3.6 }),
+      streams
+    );
+    const matches = xml.match(/<trkpt /g) ?? [];
+    expect(matches.length).toBe(3);
+    expect(xml).toContain('lat="40.4" lon="-3.6"');
+    expect(xml).toContain('<ele>651.4</ele>');
+    // time absoluto = startDate (08:30:00Z) + offset 2s
+    expect(xml).toContain('<time>2024-05-20T08:30:02Z</time>');
+    expect(xml).toContain('<gpxtpx:hr>130</gpxtpx:hr>');
+    expect(xml).toContain('<gpxtpx:cad>84</gpxtpx:cad>');
+    expect(xml).toContain('<gpxtpx:TrackPointExtension>');
+  });
+
+  it('prioriza los streams sobre los endpoints inicio/fin', () => {
+    const xml = buildGpxFromActivity(
+      makeActivity({
+        startLatitude: 1,
+        startLongitude: 1,
+        endLatitude: 2,
+        endLongitude: 2,
+      }),
+      streams
+    );
+    const matches = xml.match(/<trkpt /g) ?? [];
+    expect(matches.length).toBe(3);
+  });
+
+  it('cae a metadatos cuando los streams no tienen GPS', () => {
+    const noGps = { fetchedAt: '2024-05-20T10:00:00Z', hasGps: false };
+    const xml = buildGpxFromActivity(makeActivity(), noGps);
+    expect(xml).not.toContain('<trkpt');
+  });
+});
+
 describe('buildGpxFilename', () => {
   it('genera un nombre seguro YYYY-MM-DD_slug.gpx', () => {
     const f = buildGpxFilename(makeActivity({ name: 'Rodaje suave – Retiro (8km)' }));

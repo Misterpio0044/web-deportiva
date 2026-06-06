@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { createRequire } from 'node:module';
 import { pool } from '../../database/pool';
 import { PgActivityRepository } from '../../persistence/PgActivityRepository';
+import { PgAthleteRepository } from '../../persistence/PgAthleteRepository';
+import { StravaApiClient } from '../../strava/StravaApiClient';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { ForbiddenError } from '../../../domain/shared/DomainError';
 import { CreateActivityUseCase } from '../../../application/activity/CreateActivityUseCase';
@@ -128,7 +130,9 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 router.get('/:id/gpx', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const activityRepo = new PgActivityRepository(pool);
-    const useCase = new ExportActivityGpxUseCase(activityRepo);
+    const athleteRepo = new PgAthleteRepository(pool);
+    const stravaClient = new StravaApiClient();
+    const useCase = new ExportActivityGpxUseCase(activityRepo, athleteRepo, stravaClient);
     const activityId = parseInt(String(req.params.id), 10);
     if (Number.isNaN(activityId)) {
       res.status(400).json({ message: 'Id de actividad inválido', code: 'BAD_REQUEST' });

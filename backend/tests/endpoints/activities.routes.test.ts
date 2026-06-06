@@ -9,10 +9,18 @@ const repos = vi.hoisted(() => ({
     findAll: vi.fn(),
     searchActivities: vi.fn(),
     upsertMany: vi.fn(),
+    getActivityStreams: vi.fn(),
+    saveActivityStreams: vi.fn(),
+    findActivityIdsMissingStreams: vi.fn(),
   },
 }));
 
 vi.mock('../../src/infrastructure/database/pool', () => ({ pool: {} }));
+vi.mock('../../src/infrastructure/strava/StravaApiClient', () => ({
+  StravaApiClient: class {
+    getActivityStreams = vi.fn().mockResolvedValue(null);
+  },
+}));
 vi.mock('../../src/infrastructure/persistence/PgAthleteRepository', () => ({
   PgAthleteRepository: class {
     constructor() {
