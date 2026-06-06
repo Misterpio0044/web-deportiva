@@ -44,15 +44,11 @@ function SortableHeader({
         aria-label={`Ordenar por ${label}`}
       >
         {label}
-        <span className="text-[10px]">
-          {active ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}
-        </span>
+        <span className="text-[10px]">{active ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}</span>
       </button>
     </th>
   );
 }
-
-
 
 export function ActivitiesPage() {
   const user = useAuthStore((s) => s.user);
@@ -146,7 +142,6 @@ export function ActivitiesPage() {
     setSelectedIds(new Set());
   }, [selectedAthleteId, search, dateFrom, dateTo]);
 
-
   // Estado indeterminate del checkbox maestro
   const allSelected = activities.length > 0 && selectedIds.size === activities.length;
   const someSelected = selectedIds.size > 0 && !allSelected;
@@ -229,7 +224,6 @@ export function ActivitiesPage() {
   };
 
   return (
-
     <AppShell>
       <div className="space-y-6">
         <PageHeader
@@ -436,7 +430,6 @@ export function ActivitiesPage() {
                       onSort={handleSort}
                     />
                     <th className="px-5 py-3">Desnivel</th>
-
                   </tr>
                 </thead>
                 <tbody>

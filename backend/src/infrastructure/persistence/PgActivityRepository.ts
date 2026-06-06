@@ -170,10 +170,9 @@ export class PgActivityRepository implements ActivityRepository {
   }
 
   async getActivityStreams(activityId: number): Promise<ActivityStreams | null> {
-    const { rows } = await this.pool.query(
-      `SELECT streams_json FROM activities WHERE id = $1`,
-      [activityId]
-    );
+    const { rows } = await this.pool.query(`SELECT streams_json FROM activities WHERE id = $1`, [
+      activityId,
+    ]);
     const value = rows[0]?.streams_json;
     return value ? (value as ActivityStreams) : null;
   }
