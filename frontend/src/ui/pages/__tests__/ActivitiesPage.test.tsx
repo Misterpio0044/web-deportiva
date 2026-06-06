@@ -69,7 +69,12 @@ function renderPage() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  (activitiesApi.list as ReturnType<typeof vi.fn>).mockResolvedValue(fakeActivities);
+  (activitiesApi.list as ReturnType<typeof vi.fn>).mockResolvedValue({
+    activities: fakeActivities,
+    total: fakeActivities.length,
+    page: 1,
+    limit: 20,
+  });
   useAuthStore.setState({
     token: 't',
     user: { id: 1, email: 'a@b.c', role: 'user', firstname: 'A', lastname: 'B' },

@@ -7,6 +7,7 @@ const repos = vi.hoisted(() => ({
     findByAthleteId: vi.fn(),
     findById: vi.fn(),
     findAll: vi.fn(),
+    searchActivities: vi.fn(),
     upsertMany: vi.fn(),
   },
 }));
@@ -82,30 +83,69 @@ describe('POST /api/activities', () => {
 
 describe('GET /api/activities', () => {
   it('user solo ve las suyas (ignora athleteId del query)', async () => {
-    repos.activity.findByAthleteId.mockResolvedValue([makeActivity({ athleteId: 1 })]);
+    repos.activity.searchActivities.mockResolvedValue({
+      items: [makeActivity({ athleteId: 1 })],
+      total: 1,
+    });
     const res = await request(app)
       .get('/api/activities?athleteId=999')
       .set('Authorization', `Bearer ${userToken(1)}`);
     expect(res.status).toBe(200);
-    expect(repos.activity.findByAthleteId).toHaveBeenCalledWith(1, 100);
+    expect(repos.activity.searchActivities).toHaveBeenCalledWith(
+      expect.objectContaining({ athleteId: 1 })
+    );
+    expect(res.body).toMatchObject({ total: 1, page: 1, limit: 20 });
   });
 
   it('admin con athleteId pide ese atleta', async () => {
-    repos.activity.findByAthleteId.mockResolvedValue([]);
+    repos.activity.searchActivities.mockResolvedValue({ items: [], total: 0 });
     const res = await request(app)
       .get('/api/activities?athleteId=7')
       .set('Authorization', `Bearer ${adminToken()}`);
     expect(res.status).toBe(200);
-    expect(repos.activity.findByAthleteId).toHaveBeenCalledWith(7, 100);
+    expect(repos.activity.searchActivities).toHaveBeenCalledWith(
+      expect.objectContaining({ athleteId: 7 })
+    );
   });
 
-  it('admin sin athleteId pide findAll', async () => {
-    repos.activity.findAll.mockResolvedValue([]);
+  it('admin sin athleteId consulta el global (athleteId null)', async () => {
+    repos.activity.searchActivities.mockResolvedValue({ items: [], total: 0 });
     const res = await request(app)
       .get('/api/activities')
       .set('Authorization', `Bearer ${adminToken()}`);
     expect(res.status).toBe(200);
-    expect(repos.activity.findAll).toHaveBeenCalledWith(100);
+    expect(repos.activity.searchActivities).toHaveBeenCalledWith(
+      expect.objectContaining({ athleteId: null })
+    );
+  });
+
+  it('propaga paginación, orden, búsqueda y filtros del query', async () => {
+    repos.activity.searchActivities.mockResolvedValue({ items: [], total: 0 });
+    const res = await request(app)
+      .get(
+        '/api/activities?page=2&limit=10&sortBy=distance&sortDir=asc&search=trail&sportType=Run&dateFrom=2024-01-01&dateTo=2024-12-31'
+      )
+      .set('Authorization', `Bearer ${adminToken()}`);
+    expect(res.status).toBe(200);
+    expect(repos.activity.searchActivities).toHaveBeenCalledWith(
+      expect.objectContaining({
+        page: 2,
+        limit: 10,
+        sortBy: 'distance',
+        sortDir: 'asc',
+        search: 'trail',
+        sportType: 'Run',
+        dateFrom: '2024-01-01',
+        dateTo: '2024-12-31',
+      })
+    );
+  });
+
+  it('400 si los parámetros de query son inválidos', async () => {
+    const res = await request(app)
+      .get('/api/activities?sortBy=invalido')
+      .set('Authorization', `Bearer ${adminToken()}`);
+    expect(res.status).toBe(400);
   });
 });
 

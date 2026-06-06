@@ -8,6 +8,7 @@ export function createFakeActivityRepo(): ActivityRepository & {
     findByAthleteId: vi.fn(),
     findById: vi.fn(),
     findAll: vi.fn(),
+    searchActivities: vi.fn(),
     getDashboardData: vi.fn(),
     getGlobalDashboardData: vi.fn(),
     deleteByAthleteId: vi.fn(),

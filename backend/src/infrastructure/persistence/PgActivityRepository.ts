@@ -7,8 +7,20 @@ import {
   HeartRateZone,
   HeatmapDay,
   UpsertManyResult,
+  SearchActivitiesParams,
+  SearchActivitiesResult,
+  ActivitySortField,
 } from '../../domain/activity/ActivityRepository';
 import { Activity } from '../../domain/activity/Activity';
+
+const ACTIVITY_SORT_COLUMNS: Record<ActivitySortField, string> = {
+  date: 'start_date_local',
+  name: 'name',
+  distance: 'distance',
+  time: 'moving_time',
+  speed: 'average_speed',
+  hr: 'average_heartrate',
+};
 
 function rowToActivity(row: Record<string, unknown>): Activity {
   return {
@@ -76,6 +88,68 @@ export class PgActivityRepository implements ActivityRepository {
       [limit]
     );
     return rows.map(rowToActivity);
+  }
+
+  async searchActivities(params: SearchActivitiesParams): Promise<SearchActivitiesResult> {
+    const {
+      athleteId = null,
+      page,
+      limit,
+      sortBy,
+      sortDir,
+      search,
+      sportType,
+      dateFrom,
+      dateTo,
+    } = params;
+
+    // Whitelist de columnas y dirección para evitar inyección SQL en ORDER BY.
+    const sortColumn = ACTIVITY_SORT_COLUMNS[sortBy] ?? 'start_date_local';
+    const direction = sortDir === 'asc' ? 'ASC' : 'DESC';
+
+    const conditions: string[] = [];
+    const values: unknown[] = [];
+
+    if (athleteId != null) {
+      values.push(athleteId);
+      conditions.push(`athlete_id = $${values.length}`);
+    }
+    if (search) {
+      values.push(`%${search}%`);
+      conditions.push(`name ILIKE $${values.length}`);
+    }
+    if (sportType) {
+      values.push(sportType);
+      conditions.push(`sport_type = $${values.length}`);
+    }
+    if (dateFrom) {
+      values.push(dateFrom);
+      conditions.push(`start_date_local >= $${values.length}`);
+    }
+    if (dateTo) {
+      values.push(dateTo);
+      conditions.push(`start_date_local <= $${values.length}`);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const countResult = await this.pool.query(
+      `SELECT COUNT(*)::int AS total FROM activities ${whereClause}`,
+      values
+    );
+    const total = (countResult.rows[0]?.total as number) ?? 0;
+
+    const offset = (page - 1) * limit;
+    const limitParam = `$${values.length + 1}`;
+    const offsetParam = `$${values.length + 2}`;
+    const { rows } = await this.pool.query(
+      `SELECT * FROM activities ${whereClause}
+       ORDER BY ${sortColumn} ${direction} NULLS LAST, id DESC
+       LIMIT ${limitParam} OFFSET ${offsetParam}`,
+      [...values, limit, offset]
+    );
+
+    return { items: rows.map(rowToActivity), total };
   }
 
   async getDashboardData(athleteId: number): Promise<DashboardData> {
