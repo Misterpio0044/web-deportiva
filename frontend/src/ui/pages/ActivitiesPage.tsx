@@ -200,7 +200,7 @@ export function ActivitiesPage() {
     }
   };
 
-  const colCount = useMemo(() => (selectionMode ? 9 : 8), [selectionMode]);
+  const colCount = useMemo(() => (selectionMode ? 8 : 7), [selectionMode]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const hasActiveFilters = Boolean(searchInput || dateFrom || dateTo);
@@ -393,7 +393,6 @@ export function ActivitiesPage() {
                       sortDir={sortDir}
                       onSort={handleSort}
                     />
-                    <th className="px-5 py-3">Deporte</th>
                     <SortableHeader
                       field="date"
                       label="Fecha"
@@ -462,7 +461,6 @@ export function ActivitiesPage() {
                             {a.name}
                           </Link>
                         </td>
-                        <td className="px-5 py-3 text-slate-600">{a.sportType}</td>
                         <td className="px-5 py-3 text-slate-500">{formatDate(a.startDateLocal)}</td>
                         <td className="px-5 py-3 text-slate-700">{formatDistance(a.distance)}</td>
                         <td className="px-5 py-3 text-slate-700">{formatTime(a.movingTime)}</td>
