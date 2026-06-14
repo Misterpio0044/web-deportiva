@@ -6,11 +6,7 @@ export interface Athlete {
   email: string | null;
   role: 'admin' | 'user';
   passwordHash: string | null;
-  profileMediumUrl?: string;
-  profileUrl?: string;
-  measurementPreference?: string;
   maxHeartrate?: number;
-  restingHeartrate?: number;
   weight?: number;
 
   // Strava OAuth link
