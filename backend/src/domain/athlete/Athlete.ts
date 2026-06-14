@@ -24,6 +24,7 @@ export interface Athlete {
   lastStravaSyncError?: string;
   lastStravaSyncCreated?: number;
   lastStravaSyncUpdated?: number;
+  lastStravaSyncDeleted?: number;
 
   createdAt: Date;
   updatedAt: Date;

@@ -33,6 +33,7 @@ const EMPTY_STATUS: StravaStatus = {
   lastSyncError: null,
   lastSyncCreated: null,
   lastSyncUpdated: null,
+  lastSyncDeleted: null,
 };
 
 export function ConnectStravaCard({ onSyncComplete, initialError }: Props) {
@@ -94,11 +95,12 @@ export function ConnectStravaCard({ onSyncComplete, initialError }: Props) {
               lastSyncError: null,
               lastSyncCreated: result.created,
               lastSyncUpdated: result.updated,
+              lastSyncDeleted: result.deleted,
             }
           : s
       );
       setMessage(
-        `Sincronización OK · ${result.activitiesSynced} actividades (${result.created} nuevas, ${result.updated} actualizadas).`
+        `Sincronización OK · ${result.activitiesSynced} actividades (${result.created} nuevas, ${result.updated} actualizadas${result.deleted > 0 ? `, ${result.deleted} eliminadas` : ''}).`
       );
       onSyncComplete?.();
     } catch (err) {
@@ -254,7 +256,11 @@ export function ConnectStravaCard({ onSyncComplete, initialError }: Props) {
                     <span className="font-medium text-slate-700">
                       {(status.lastSyncCreated ?? 0) + (status.lastSyncUpdated ?? 0)} actividades
                     </span>{' '}
-                    ({status.lastSyncCreated} nuevas, {status.lastSyncUpdated} actualizadas)
+                    ({status.lastSyncCreated} nuevas, {status.lastSyncUpdated} actualizadas
+                    {status.lastSyncDeleted != null && status.lastSyncDeleted > 0
+                      ? `, ${status.lastSyncDeleted} eliminadas`
+                      : ''}
+                    )
                   </div>
                 )}
               {status?.lastSyncStatus === 'error' && status.lastSyncError && (

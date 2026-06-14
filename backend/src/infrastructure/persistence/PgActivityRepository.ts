@@ -246,6 +246,21 @@ export class PgActivityRepository implements ActivityRepository {
     await this.pool.query('DELETE FROM activities WHERE athlete_id = $1', [athleteId]);
   }
 
+  async deleteOrphanedForAthlete(athleteId: number, keepIds: number[]): Promise<number> {
+    if (keepIds.length === 0) {
+      // Si no hay actividades en Strava, borramos todo (caso de cuenta sin actividades)
+      const { rowCount } = await this.pool.query('DELETE FROM activities WHERE athlete_id = $1', [
+        athleteId,
+      ]);
+      return rowCount ?? 0;
+    }
+    const { rowCount } = await this.pool.query(
+      'DELETE FROM activities WHERE athlete_id = $1 AND id <> ALL($2::bigint[])',
+      [athleteId, keepIds]
+    );
+    return rowCount ?? 0;
+  }
+
   async upsertMany(activities: Activity[]): Promise<UpsertManyResult> {
     if (activities.length === 0) return { created: 0, updated: 0 };
 

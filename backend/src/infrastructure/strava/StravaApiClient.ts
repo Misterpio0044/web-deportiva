@@ -185,6 +185,24 @@ export class StravaApiClient {
   }
 
   /**
+   * Obtiene TODAS las actividades del atleta paginando hasta recibir una
+   * página vacía. Usa perPage=200 (máximo permitido por Strava) para minimizar
+   * el número de peticiones.
+   */
+  async listAllActivities(accessToken: string): Promise<StravaActivitySummary[]> {
+    const perPage = 200;
+    const all: StravaActivitySummary[] = [];
+    let page = 1;
+    for (;;) {
+      const batch = await this.listActivities(accessToken, { perPage, page });
+      all.push(...batch);
+      if (batch.length < perPage) break;
+      page++;
+    }
+    return all;
+  }
+
+  /**
    * Descarga los streams de una actividad y los devuelve normalizados.
    * Devuelve `null` si la actividad ya no existe en Strava (404). Otros errores
    * (incluido 429 rate limit) se propagan como StravaApiError para que el
