@@ -27,10 +27,7 @@ export interface StravaAthletePayload {
   city?: string;
   country?: string;
   sex?: string;
-  profile_medium?: string;
-  profile?: string;
   weight?: number;
-  measurement_preference?: string;
   shoes?: StravaGearSummary[];
 }
 

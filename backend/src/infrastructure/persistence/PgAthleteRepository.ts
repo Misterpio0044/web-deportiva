@@ -20,11 +20,7 @@ function rowToAthlete(row: Record<string, unknown>): Athlete {
     email: (row.email as string | null) ?? null,
     role: row.role as 'admin' | 'user',
     passwordHash: (row.password_hash as string | null) ?? null,
-    profileMediumUrl: row.profile_medium_url as string | undefined,
-    profileUrl: row.profile_url as string | undefined,
-    measurementPreference: row.measurement_preference as string | undefined,
     maxHeartrate: row.max_heartrate as number | undefined,
-    restingHeartrate: row.resting_heartrate as number | undefined,
     weight: row.weight as number | undefined,
     stravaId: row.strava_id ? Number(row.strava_id) : undefined,
     stravaScope: (row.strava_scope as string | undefined) ?? undefined,
@@ -102,21 +98,18 @@ export class PgAthleteRepository implements AthleteRepository {
     const { rows } = await this.pool.query(
       `INSERT INTO athletes
          (id, firstname, lastname, username, email, password_hash, role,
-          profile_medium_url, profile_url, weight, measurement_preference,
+          weight,
           strava_id, strava_scope, strava_access_token, strava_refresh_token,
           strava_token_expires_at)
        VALUES
          (nextval('athletes_local_id_seq'), $1, $2, $3, NULL, NULL, 'user',
-          $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         input.firstname,
         input.lastname,
         input.username,
-        input.profileMediumUrl ?? null,
-        input.profileUrl ?? null,
         input.weight ?? null,
-        input.measurementPreference ?? null,
         input.stravaId,
         input.scope,
         input.accessToken,
@@ -169,20 +162,14 @@ export class PgAthleteRepository implements AthleteRepository {
       `UPDATE athletes
          SET firstname = COALESCE($1, firstname),
              lastname = COALESCE($2, lastname),
-             profile_medium_url = COALESCE($3, profile_medium_url),
-             profile_url = COALESCE($4, profile_url),
-             weight = COALESCE($5, weight),
-             measurement_preference = COALESCE($6, measurement_preference),
-             last_strava_sync_at = COALESCE($7, last_strava_sync_at),
+             weight = COALESCE($3, weight),
+             last_strava_sync_at = COALESCE($4, last_strava_sync_at),
              updated_at = NOW()
-       WHERE id = $8`,
+       WHERE id = $5`,
       [
         input.firstname ?? null,
         input.lastname ?? null,
-        input.profileMediumUrl ?? null,
-        input.profileUrl ?? null,
         input.weight ?? null,
-        input.measurementPreference ?? null,
         input.lastStravaSyncAt ?? null,
         athleteId,
       ]
@@ -272,7 +259,7 @@ export class PgAthleteRepository implements AthleteRepository {
   async findAll(): Promise<AthletePublic[]> {
     const { rows } = await this.pool.query(
       `SELECT a.id, a.firstname, a.lastname, a.username, a.email, a.role,
-              a.profile_medium_url, a.strava_id, a.strava_scope,
+              a.strava_id, a.strava_scope,
               a.last_strava_sync_at, a.last_strava_sync_status,
               a.created_at, a.updated_at,
               COUNT(ac.id)::int AS activity_count
@@ -288,7 +275,6 @@ export class PgAthleteRepository implements AthleteRepository {
       username: r.username,
       email: r.email ?? null,
       role: r.role as 'admin' | 'user',
-      profileMediumUrl: r.profile_medium_url,
       stravaId: r.strava_id ? Number(r.strava_id) : undefined,
       stravaScope: r.strava_scope ?? undefined,
       lastStravaSyncAt: r.last_strava_sync_at ?? undefined,

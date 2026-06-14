@@ -107,10 +107,7 @@ export class SyncStravaUseCase {
       await this.athleteRepo.updateStravaProfile(athlete.id, {
         firstname: stravaAthlete.firstname,
         lastname: stravaAthlete.lastname,
-        profileMediumUrl: stravaAthlete.profile_medium,
-        profileUrl: stravaAthlete.profile,
         weight: stravaAthlete.weight,
-        measurementPreference: stravaAthlete.measurement_preference,
       });
 
       // 2. Upsert de gear ANTES de las actividades para que la FK no se anule
