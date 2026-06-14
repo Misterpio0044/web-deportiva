@@ -69,5 +69,6 @@ export interface ActivityRepository {
   getDashboardData(athleteId: number): Promise<DashboardData>;
   getGlobalDashboardData(): Promise<DashboardData>;
   deleteByAthleteId(athleteId: number): Promise<void>;
+  deleteOrphanedForAthlete(athleteId: number, keepIds: number[]): Promise<number>;
   upsertMany(activities: Activity[]): Promise<UpsertManyResult>;
 }

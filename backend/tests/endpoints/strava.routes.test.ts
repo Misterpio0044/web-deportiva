@@ -15,12 +15,14 @@ const repos = vi.hoisted(() => ({
   },
   activity: {
     upsertMany: vi.fn(),
+    deleteOrphanedForAthlete: vi.fn(),
   },
   strava: {
     exchangeCode: vi.fn(),
     refreshAccessToken: vi.fn(),
     getAthlete: vi.fn(),
     listActivities: vi.fn(),
+    listAllActivities: vi.fn(),
   },
 }));
 
@@ -113,8 +115,9 @@ describe('POST /api/strava/sync', () => {
       })
     );
     repos.strava.getAthlete.mockResolvedValue({ id: 555, firstname: 'A', lastname: 'B' });
-    repos.strava.listActivities.mockResolvedValue([]);
+    repos.strava.listAllActivities.mockResolvedValue([]);
     repos.activity.upsertMany.mockResolvedValue({ created: 0, updated: 0 });
+    repos.activity.deleteOrphanedForAthlete.mockResolvedValue(0);
 
     const res = await request(app)
       .post('/api/strava/sync')

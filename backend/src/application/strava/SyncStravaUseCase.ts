@@ -14,7 +14,6 @@ import { refreshStravaTokenIfNeeded } from './refreshStravaTokenIfNeeded';
 
 export interface SyncStravaInput {
   athleteId: number;
-  perPage?: number;
 }
 
 // Máximo de actividades cuyos streams GPS se descargan por sincronización, para
@@ -26,6 +25,7 @@ export interface SyncStravaOutput {
   activitiesSynced: number;
   created: number;
   updated: number;
+  deleted: number;
   gearSynced: number;
   profileUpdated: boolean;
   lastSyncAt: Date;
@@ -120,11 +120,13 @@ export class SyncStravaUseCase {
       await this.gearRepo.upsertManyForAthlete(athlete.id, mappedGear);
 
       // 3. Actividades
-      const raws = await this.stravaClient.listActivities(accessToken, {
-        perPage: input.perPage ?? 30,
-      });
+      const raws = await this.stravaClient.listAllActivities(accessToken);
       const mapped = raws.map((r) => mapActivity(athlete.id, r));
       const { created, updated } = await this.activityRepo.upsertMany(mapped);
+
+      // Eliminar actividades que ya no existen en Strava
+      const stravaIds = raws.map((r) => r.id);
+      const deleted = await this.activityRepo.deleteOrphanedForAthlete(athlete.id, stravaIds);
 
       // 4. Backfill de la traza GPS (streams) por tandas, respetando la cuota.
       //    Tolerante a fallos: un error aquí no debe invalidar el sync.
@@ -134,12 +136,14 @@ export class SyncStravaUseCase {
         at: now,
         created,
         updated,
+        deleted,
       });
 
       return {
         activitiesSynced: created + updated,
         created,
         updated,
+        deleted,
         gearSynced: mappedGear.length,
         profileUpdated: true,
         lastSyncAt: now,

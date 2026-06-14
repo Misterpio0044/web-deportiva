@@ -30,6 +30,7 @@ function fakeClient(overrides: any = {}) {
       ],
     }),
     listActivities: vi.fn().mockResolvedValue([]),
+    listAllActivities: vi.fn().mockResolvedValue([]),
     ...overrides,
   } as any;
 }
@@ -62,11 +63,61 @@ describe('SyncStravaUseCase', () => {
     (aRepo.findById as any).mockResolvedValue(makeLinkedAthlete());
     (actRepo.upsertMany as any).mockResolvedValue({ created: 2, updated: 1 });
 
+    const activity = {
+      id: 1,
+      name: 'A',
+      type: 'Run',
+      sport_type: 'Run',
+      start_date: '2024-01-01T00:00:00Z',
+      start_date_local: '2024-01-01T00:00:00Z',
+      timezone: 'UTC',
+      utc_offset: 0,
+      distance: 5000,
+      moving_time: 1500,
+      elapsed_time: 1500,
+      total_elevation_gain: 50,
+      has_heartrate: false,
+      trainer: false,
+      commute: false,
+    };
+
     const client = fakeClient({
-      listActivities: vi.fn().mockResolvedValue([
+      listAllActivities: vi.fn().mockResolvedValue([activity]),
+    });
+
+    const result = await new SyncStravaUseCase(aRepo, actRepo, client, gearRepo).execute({
+      athleteId: 1,
+    });
+
+    expect(result.activitiesSynced).toBe(3);
+    expect(result.created).toBe(2);
+    expect(result.updated).toBe(1);
+    expect(result.deleted).toBe(0);
+    expect(result.gearSynced).toBe(1);
+    expect(aRepo.updateStravaProfile).toHaveBeenCalledTimes(1);
+    expect(aRepo.recordSyncSuccess).toHaveBeenCalledTimes(1);
+    expect(gearRepo.upsertManyForAthlete).toHaveBeenCalledWith(
+      1,
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'g1', name: 'Nike Vaporfly', isPrimary: true }),
+      ])
+    );
+  });
+
+  it('elimina actividades que ya no existen en Strava', async () => {
+    const aRepo = createFakeAthleteRepo();
+    const actRepo = createFakeActivityRepo();
+    const gearRepo = createFakeGearRepo();
+    (aRepo.findById as any).mockResolvedValue(makeLinkedAthlete());
+    (actRepo.upsertMany as any).mockResolvedValue({ created: 0, updated: 1 });
+    (actRepo.deleteOrphanedForAthlete as any).mockResolvedValue(2);
+
+    const client = fakeClient({
+      getAthlete: vi.fn().mockResolvedValue({ id: 999, shoes: [] }),
+      listAllActivities: vi.fn().mockResolvedValue([
         {
-          id: 1,
-          name: 'A',
+          id: 42,
+          name: 'Run',
           type: 'Run',
           sport_type: 'Run',
           start_date: '2024-01-01T00:00:00Z',
@@ -76,7 +127,7 @@ describe('SyncStravaUseCase', () => {
           distance: 5000,
           moving_time: 1500,
           elapsed_time: 1500,
-          total_elevation_gain: 50,
+          total_elevation_gain: 0,
           has_heartrate: false,
           trainer: false,
           commute: false,
@@ -88,18 +139,8 @@ describe('SyncStravaUseCase', () => {
       athleteId: 1,
     });
 
-    expect(result.activitiesSynced).toBe(3);
-    expect(result.created).toBe(2);
-    expect(result.updated).toBe(1);
-    expect(result.gearSynced).toBe(1);
-    expect(aRepo.updateStravaProfile).toHaveBeenCalledTimes(1);
-    expect(aRepo.recordSyncSuccess).toHaveBeenCalledTimes(1);
-    expect(gearRepo.upsertManyForAthlete).toHaveBeenCalledWith(
-      1,
-      expect.arrayContaining([
-        expect.objectContaining({ id: 'g1', name: 'Nike Vaporfly', isPrimary: true }),
-      ])
-    );
+    expect(actRepo.deleteOrphanedForAthlete).toHaveBeenCalledWith(1, [42]);
+    expect(result.deleted).toBe(2);
   });
 
   it('upserta gear ANTES de las actividades para que la FK no se anule', async () => {
@@ -160,7 +201,7 @@ describe('SyncStravaUseCase', () => {
 
     const client = fakeClient({
       getAthlete: vi.fn().mockResolvedValue({ id: 999, shoes: [] }),
-      listActivities: vi.fn().mockResolvedValue([
+      listAllActivities: vi.fn().mockResolvedValue([
         {
           id: 1,
           name: 'A',

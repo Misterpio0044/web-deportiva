@@ -12,6 +12,7 @@ export function createFakeActivityRepo(): ActivityRepository & {
     getDashboardData: vi.fn(),
     getGlobalDashboardData: vi.fn(),
     deleteByAthleteId: vi.fn(),
+    deleteOrphanedForAthlete: vi.fn().mockResolvedValue(0),
     upsertMany: vi.fn(),
     getActivityStreams: vi.fn().mockResolvedValue(null),
     saveActivityStreams: vi.fn().mockResolvedValue(undefined),

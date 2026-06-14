@@ -43,6 +43,10 @@ function rowToAthlete(row: Record<string, unknown>): Athlete {
       row.last_strava_sync_updated !== null && row.last_strava_sync_updated !== undefined
         ? Number(row.last_strava_sync_updated)
         : undefined,
+    lastStravaSyncDeleted:
+      row.last_strava_sync_deleted !== null && row.last_strava_sync_deleted !== undefined
+        ? Number(row.last_strava_sync_deleted)
+        : undefined,
     createdAt: row.created_at as Date,
     updatedAt: row.updated_at as Date,
   };
@@ -231,6 +235,7 @@ export class PgAthleteRepository implements AthleteRepository {
              last_strava_sync_error = NULL,
              last_strava_sync_created = NULL,
              last_strava_sync_updated = NULL,
+             last_strava_sync_deleted = NULL,
              updated_at = NOW()
        WHERE id = $1`,
       [athleteId]
@@ -245,9 +250,10 @@ export class PgAthleteRepository implements AthleteRepository {
              last_strava_sync_error = NULL,
              last_strava_sync_created = $2,
              last_strava_sync_updated = $3,
+             last_strava_sync_deleted = $4,
              updated_at = NOW()
-       WHERE id = $4`,
-      [input.at, input.created, input.updated, athleteId]
+       WHERE id = $5`,
+      [input.at, input.created, input.updated, input.deleted, athleteId]
     );
   }
 

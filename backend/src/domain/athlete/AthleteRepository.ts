@@ -53,6 +53,7 @@ export interface RecordSyncSuccessInput {
   at: Date;
   created: number;
   updated: number;
+  deleted: number;
 }
 
 export interface RecordSyncErrorInput {

@@ -106,6 +106,7 @@ stravaActionRouter.get('/status', async (req: Request, res: Response, next: Next
       lastSyncError: athlete.lastStravaSyncError ?? null,
       lastSyncCreated: athlete.lastStravaSyncCreated ?? null,
       lastSyncUpdated: athlete.lastStravaSyncUpdated ?? null,
+      lastSyncDeleted: athlete.lastStravaSyncDeleted ?? null,
     });
   } catch (err) {
     next(err);

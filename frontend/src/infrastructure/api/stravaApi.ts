@@ -9,12 +9,14 @@ export interface StravaStatus {
   lastSyncError: string | null;
   lastSyncCreated: number | null;
   lastSyncUpdated: number | null;
+  lastSyncDeleted: number | null;
 }
 
 export interface StravaSyncResult {
   activitiesSynced: number;
   created: number;
   updated: number;
+  deleted: number;
   profileUpdated: boolean;
   lastSyncAt: string;
 }
