@@ -259,7 +259,8 @@ export function ConnectStravaCard({ onSyncComplete, initialError }: Props) {
                     ({status.lastSyncCreated} nuevas, {status.lastSyncUpdated} actualizadas
                     {status.lastSyncDeleted != null && status.lastSyncDeleted > 0
                       ? `, ${status.lastSyncDeleted} eliminadas`
-                      : ''})
+                      : ''}
+                    )
                   </div>
                 )}
               {status?.lastSyncStatus === 'error' && status.lastSyncError && (

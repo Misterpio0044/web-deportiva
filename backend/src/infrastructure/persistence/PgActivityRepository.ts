@@ -249,10 +249,9 @@ export class PgActivityRepository implements ActivityRepository {
   async deleteOrphanedForAthlete(athleteId: number, keepIds: number[]): Promise<number> {
     if (keepIds.length === 0) {
       // Si no hay actividades en Strava, borramos todo (caso de cuenta sin actividades)
-      const { rowCount } = await this.pool.query(
-        'DELETE FROM activities WHERE athlete_id = $1',
-        [athleteId]
-      );
+      const { rowCount } = await this.pool.query('DELETE FROM activities WHERE athlete_id = $1', [
+        athleteId,
+      ]);
       return rowCount ?? 0;
     }
     const { rowCount } = await this.pool.query(
